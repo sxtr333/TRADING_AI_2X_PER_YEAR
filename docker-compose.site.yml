@@ -1,0 +1,78 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker.site.Dockerfile
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      TF_USE_LEGACY_KERAS: "1"
+      TF_CPP_MIN_LOG_LEVEL: "2"
+      NEWS_DIR: "/app/data/news"
+      RAW_NEWS: "/app/data/news/news_raw.parquet"
+      DEDUP_NEWS: "/app/data/news/news_dedup.parquet"
+      NEWS_CACHE: "/app/data/news/news_sentiment_cache.parquet"
+      NEWS_SENT: "/app/data/news/ccnews_2026_live_merged.parquet"
+      NEWS_PATH: "/app/data/news/ccnews_2026_live_merged.parquet"
+      API_CACHE_FORECAST_SEC: "${API_CACHE_FORECAST_SEC:-20}"
+      API_CACHE_FORECAST_MULTI_SEC: "${API_CACHE_FORECAST_MULTI_SEC:-20}"
+      API_CACHE_CANDLES_SEC: "${API_CACHE_CANDLES_SEC:-60}"
+      API_CACHE_TRADES_SEC: "${API_CACHE_TRADES_SEC:-60}"
+      API_CACHE_NEWS_SEC: "${API_CACHE_NEWS_SEC:-45}"
+      API_CACHE_NEWS_AGG_SEC: "${API_CACHE_NEWS_AGG_SEC:-45}"
+      API_CACHE_LIQUIDATIONS_SEC: "${API_CACHE_LIQUIDATIONS_SEC:-30}"
+      API_CACHE_MAX_ITEMS: "${API_CACHE_MAX_ITEMS:-8000}"
+      API_KEY: "${API_KEY:?API_KEY is required}"
+      REQUIRE_API_KEY: "${REQUIRE_API_KEY:-1}"
+      API_KEY_PROTECTED_PATHS: "${API_KEY_PROTECTED_PATHS:-/signal_quality/log}"
+      ALLOW_ORIGINS: "${ALLOW_ORIGINS:-https://tradeforge.art,https://www.tradeforge.art,http://localhost:8088,http://127.0.0.1:8088}"
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-465}"
+      SMTP_USER: "${SMTP_USER:-}"
+      SMTP_PASS: "${SMTP_PASS:-}"
+      SMTP_FROM: "${SMTP_FROM:-}"
+      SMTP_TLS: "${SMTP_TLS:-0}"
+      SMTP_SSL: "${SMTP_SSL:-1}"
+      SMTP_TIMEOUT: "${SMTP_TIMEOUT:-15}"
+      EMAIL_CODE_SECRET: "${EMAIL_CODE_SECRET:-dev-change-email-code-secret}"
+      SESSION_SECRET: "${SESSION_SECRET:?SESSION_SECRET is required}"
+      SESSION_TTL_SEC: "${SESSION_TTL_SEC:-2592000}"
+      ADMIN_API_KEY: "${ADMIN_API_KEY:-}"
+      OWNER_EMAILS: "${OWNER_EMAILS:-}"
+      AUTH_DB_PATH: "${AUTH_DB_PATH:-/app/state/users.db}"
+      YOOKASSA_SHOP_ID: "${YOOKASSA_SHOP_ID:-}"
+      YOOKASSA_SECRET_KEY: "${YOOKASSA_SECRET_KEY:-}"
+      YOOKASSA_RETURN_URL: "${YOOKASSA_RETURN_URL:-https://tradeforge.art/?payment=success}"
+      YOOKASSA_CANCEL_URL: "${YOOKASSA_CANCEL_URL:-https://tradeforge.art/?payment=cancel}"
+      YOOKASSA_PAYMENT_METHOD: "${YOOKASSA_PAYMENT_METHOD:-}"
+      PRODAMUS_SECRET_KEY: "${PRODAMUS_SECRET_KEY:-}"
+      PRODAMUS_PAYMENT_URL: "${PRODAMUS_PAYMENT_URL:-}"
+      PRODAMUS_RETURN_URL: "${PRODAMUS_RETURN_URL:-https://tradeforge.art/payment-success.html}"
+      PRODAMUS_CANCEL_URL: "${PRODAMUS_CANCEL_URL:-https://tradeforge.art/payment-cancel.html}"
+      PRODAMUS_WEBHOOK_URL: "${PRODAMUS_WEBHOOK_URL:-https://api.tradeforge.art/billing/prodamus/webhook}"
+      PRODAMUS_PAYMENT_METHOD: "${PRODAMUS_PAYMENT_METHOD:-}"
+      PRODAMUS_DEMO_MODE: "${PRODAMUS_DEMO_MODE:-0}"
+    command: >-
+      python /app/serve_fastapi.py
+      --model-h20 /app/model_battle_itransformer.keras
+      --stats-h20 /app/norm_stats_battle_itransformer.npz
+      --model-multi /app/model_15m_itransformer_tb_multi.keras
+      --stats-multi /app/norm_stats_15m_itransformer_tb_multi.npz
+      --features /app/data/BTCUSDT_15m_features_h20_v2_news_xlmr_v4_8nodes_serve.parquet
+      --seq-len 256
+      --host 0.0.0.0
+      --port 8000
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  web:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: python -m http.server 8088 --directory /app/html
+    ports:
+      - "8088:8088"
+    restart: unless-stopped

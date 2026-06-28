@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive,nosnippet,noimageindex,max-snippet:0,max-image-preview:none,max-video-preview:0" />
+  <title>TradeForge — Live AI Engine • Pump Scout • Trial 3 days • 3333 ₽ / 4890 ₽ / 7890 ₽</title>
+  <meta name="description" content="TradeForge — прод AI-движок сигналов для BTCUSDT (15m): market structure + news/sentiment + crowd analytics, multi-horizon 5h/20h/40h, risk-first подход, live API и встроенный trial/billing." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://api.tradeforge.art" crossorigin />
+  <link rel="dns-prefetch" href="//api.tradeforge.art" />
+  <link rel="stylesheet" href="/landing.css?v=20260331c" />
+</head>
+<body>
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="wrap">
+      <div class="topbar-inner">
+        <div class="brand" aria-label="TradeForge">
+          <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+            <path d="M14 50c6-17 12-28 18-34 8 7 14 19 18 34" stroke="rgba(140,255,220,.75)" stroke-width="3" stroke-linecap="round"/>
+            <path d="M18 50h28" stroke="rgba(185,155,74,.9)" stroke-width="3" stroke-linecap="round"/>
+            <path d="M26 30c2 2 6 2 8 0 3-3 7-3 10 0" stroke="rgba(235,235,235,.35)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <div class="name">TradeForge</div>
+        </div>
+
+        <nav class="nav" aria-label="Навигация">
+          <a href="#tech">Технология</a>
+          <a href="#stack">Data Stack</a>
+          <a href="#showcase">Сигнал</a>
+          <a href="#usecases">Use cases</a>
+          <a href="#risk">Risk</a>
+          <a href="#dashboard">Витрина</a>
+          <a href="/pump-scout/">Pump Scout</a>
+          <a href="#pricing">Тариф</a>
+          <a href="#faq">FAQ</a>
+          <a href="#" id="demoLinkTop" data-protected="demo">Демо</a>
+        </nav>
+
+        <div class="actions">
+          <span class="pill" id="statusPill"><span class="dot"></span><span id="pillText">Public</span></span>
+          <a class="btn ghost" href="https://t.me/TRADE_FORGE333" target="_blank" rel="noreferrer">Поддержка 24/7</a>
+          <a class="btn ghost" href="/?login=1">Secure login</a>
+          <button class="btn ghost" id="loginBtnTop">Войти</button>
+          <button class="btn ghost" id="logoutTop" style="display:none;">Выйти</button>
+          <button class="btn primary" id="ctaBtnTop">Start trial • 3 days</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div class="wrap">
+    <header class="hero">
+      <div class="hero-grid">
+        <div class="card hero-main">
+          <div class="kicker">
+            <span class="tag">BTCUSDT • 15m candles • update 5m</span>
+            <span class="tag">Ensemble + Meta-model • ATR</span>
+            <span class="tag">Model v7 • Backtest 2025: +72% (3x)*</span>
+          </div>
+          <div class="orb-layer" aria-hidden="true">
+            <div class="orb o1"></div>
+            <div class="orb o2"></div>
+            <div class="orb o3"></div>
+          </div>
+          <h1 data-fx="shatter">TradeForge — AI сигналы и автоторговля<br/>для BTCUSDT</h1>
+          <p class="sub">
+            TradeForge — прод‑система: live домен + API, email‑верификация, trial и billing flow уже встроены.
+            Движок объединяет market structure, news/sentiment и crowd‑аналитику. Ансамбль на горизонтах 5h/20h/40h + мета‑модель решают: входить, пропускать или фиксировать риск.
+          </p>
+          <div class="status-tile reveal" id="heroStatus" role="status" aria-label="Live status">
+            <div class="st-row">
+              <span class="st-k">Current</span>
+              <span class="st-v" id="hsSignal">LONG / SHORT / FLAT</span>
+              <span class="st-pill"><span class="dot"></span><span id="hsMode">LIVE</span></span>
+            </div>
+            <div class="st-row sub">
+              <span>Update: <b id="hsUpdate">every 5 min</b></span>
+              <span>Latency: <b id="hsLatency">—</b></span>
+              <span class="muted">Signal feed is gated (email verified + plan).</span>
+            </div>
+          </div>
+
+          <div class="hero-ctas">
+            <button class="btn primary" id="ctaHero">Start trial • 3 days</button>
+            <button class="btn" id="demoBtnHero" data-protected="demo">Открыть демо</button>
+            <a class="btn" href="/pump-scout/">Открыть Pump Scout</a>
+          </div>
+          <div class="hero-trial">
+            <b>3-day trial включает:</b> полный доступ к демо-графику, сигналам LONG/SHORT/FLAT, новостям и метрикам модели без оплаты.
+          </div>
+          <div class="mini">
+            Прозрачная витрина: сигналы, вход/выход, режимы риска, метрики по годам и новости/сентимент — в одном интерфейсе. <b>Поддержка 24/7</b>: ответ ≤ 3 минуты, иначе подписка бесплатно*.
+          </div>
+          <div class="trust-strip">
+            <div class="trust-item">
+              <b>Model Update</b>
+              <span id="trustModelDate">2026-03-03</span>
+            </div>
+            <div class="trust-item">
+              <b>API Uptime</b>
+              <span id="trustApiUptime">checking...</span>
+            </div>
+            <div class="trust-item">
+              <b>Risk Notice</b>
+              Историческая доходность не гарантирует будущую.
+            </div>
+          </div>
+        </div>
+
+        <div class="card hero-side">
+          <div class="statgrid">
+            <div class="stat">
+              <div class="k">Signals</div>
+              <div class="v">LONG / SHORT / FLAT</div>
+              <div class="hint">Статус + confidence + stop</div>
+            </div>
+            <div class="stat">
+              <div class="k">Horizons</div>
+              <div class="v">5h / 20h / 40h</div>
+              <div class="hint">Согласование “голов” + мета‑фильтр</div>
+            </div>
+            <div class="stat">
+              <div class="k">Update</div>
+              <div class="v">Every 5 min</div>
+              <div class="hint">Сигналы обновляются каждые 5 минут</div>
+            </div>
+            <div class="stat">
+              <div class="k">Exit</div>
+              <div class="v">ATR trailing</div>
+              <div class="hint">Выход по ATR‑trailing stop</div>
+            </div>
+          </div>
+
+
+          <div class="liveproof reveal" aria-label="Live Proof">
+            <div class="lp-head">
+              <div class="lp-title">Live Proof</div>
+              <div class="lp-pill"><span class="dot"></span><span id="lpMode">LIVE</span></div>
+            </div>
+            <div class="lp-grid">
+              <div class="lp-item">
+                <div class="k">API</div>
+                <div class="v"><span id="lpApi">checking…</span></div>
+                <div class="hint">/health ping</div>
+              </div>
+              <div class="lp-item">
+                <div class="k">Latency</div>
+                <div class="v"><span id="lpLatency">—</span></div>
+                <div class="hint">avg request</div>
+              </div>
+              <div class="lp-item">
+                <div class="k">Last check</div>
+                <div class="v"><span id="lpChecked">—</span></div>
+                <div class="hint">local time</div>
+              </div>
+              <div class="lp-item">
+                <div class="k">Signal feed</div>
+                <div class="v"><span id="lpFeed">gated</span></div>
+                <div class="hint">auth + plan</div>
+              </div>
+            </div>
+            <div class="lp-note">Публичная витрина показывает инфраструктуру. Сигналы доступны после email‑верификации и выбранного плана.</div>
+          </div>
+
+          <div class="box">
+            <div class="section-title" style="margin-bottom:10px;">Что внутри дашборда</div>
+            <ul class="list">
+              <li>Живой график свечей с отметками входов/выходов</li>
+              <li>Переключение Conservative / Aggressive</li>
+              <li>Новости + оценка сентимента</li>
+              <li>Результаты по годам (equity / maxDD)</li>
+              <li><b>Поддержка 24/7</b>: ответ ≤ 3 минуты, иначе подписка бесплатно*</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Technology -->
+  <div id="landing-extra-root">
+<section id="tech">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Технология</h2>
+          <p class="section-sub">Ансамбль нейросетей на разных горизонтах и мета‑модель, которая фильтрует слабые сетапы.</p>
+        </div>
+        <span class="pill"><span class="dot"></span>Ensemble → Meta → ATR</span>
+      </div>
+
+      <div class="grid3">
+        <div class="feature reveal">
+          <div class="t">Market Engine</div>
+          <p class="d">BTCUSDT на 15‑минутных свечах. Ре‑сэмплинг TF (1H/4H/1D) в витрине — под один интерфейс.</p>
+        </div>
+        <div class="feature reveal">
+          <div class="t">Multi‑horizon Heads</div>
+          <p class="d">Несколько “голов” (h20/h80/h160), каждая ловит свой режим рынка. Дальше — согласование и фильтрация.</p>
+        </div>
+        <div class="feature reveal">
+          <div class="t">Model v7: +72% / 2025 (3x)*</div>
+          <p class="d">Ансамбль + мета‑слой + новостной контур оценивают рынок и снижают риск слабых входов.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Data Intelligence Stack -->
+    <section id="stack">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Data Intelligence Stack</h2>
+          <p class="section-sub">Сигнал формируется только после согласования нескольких независимых источников. Это снижает вероятность “слепого входа” и повышает качество решений.</p>
+        </div>
+        <span class="pill"><span class="dot"></span>Multi‑source → Meta‑filter → Risk</span>
+      </div>
+
+      <div class="stack">
+        <div class="feature reveal">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 17l4-5 4 3 5-7 3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="t">Market Structure</div>
+          <p class="d">Price action + техпризнаки + волатильность/режимы. Система оценивает качество входа и сразу привязывает сигнал к invalidation‑логике (stop).</p>
+        </div>
+
+        <div class="feature reveal">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 10c2-4 6-6 8-6s6 2 8 6c-2 4-6 6-8 6s-6-2-8-6Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M12 10h.01" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+              <path d="M5 20c3-2 5-3 7-3s4 1 7 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="t">News & Sentiment</div>
+          <p class="d">Новостной слой (WARC/news pipeline) + сентимент как дополнительный фактор. Это не “голый график”: контекст учитывается как фильтр шума.</p>
+        </div>
+
+        <div class="feature reveal">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6 7a4 4 0 0 1 12 0v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M5 10h14v9H5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M8 14h.01M12 14h.01M16 14h.01" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="t">Crowd Behavior Analytics</div>
+          <p class="d">Агрегированные паттерны поведения толпы/“сигнальщиков” используются как meta‑фактор качества входа. Это не копитрейдинг — это фильтр вероятности ловушек.</p>
+        </div>
+      </div>
+
+      <div class="callout reveal" style="margin-top:12px;">
+        <b>Итог:</b> сигнал публикуется только когда <b>market features</b>, <b>news/sentiment</b> и <b>crowd‑prior</b> дают согласованный сценарий, а риск‑контур подтверждает допустимость входа.
+      </div>
+    </section>
+
+    <!-- Model Showcase -->
+    <section id="showcase">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Как работает сигнал</h2>
+          <p class="section-sub">Не “магия” и не обещания. Витрина показывает, почему сигнал появился, какой риск заложен и когда он считается отменённым.</p>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="feature reveal">
+          <div class="t">Data Fusion</div>
+          <p class="d">Мультифакторный анализ: price action + техпризнаки + новости/сентимент + crowd‑слой → единая оценка качества входа.</p>
+        </div>
+        <div class="feature reveal">
+          <div class="t">Multi‑horizon Decision</div>
+          <p class="d">Решение строится на горизонтах <b>5h / 20h / 40h</b>. Согласование “голов” снижает вероятность входа в шуме.</p>
+        </div>
+        <div class="feature reveal">
+          <div class="t">Risk‑first Control</div>
+          <p class="d">Сигнал всегда идёт вместе с <b>invalidation (stop)</b> и вероятностной оценкой. Система чаще выбирает “пропустить”, чем взять слабый сетап.</p>
+        </div>
+
+        <div class="feature reveal">
+          <div class="t">Live Production API</div>
+          <p class="d">Сигналы и данные обновляются в проде. Это не статичный mock: есть домен, API и health‑проверка.</p>
+        </div>
+        <div class="feature reveal">
+          <div class="t">Validation & Discipline</div>
+          <p class="d">Акцент на проверяемость: результаты по годам, метрики риска, журнал действий. История — это контекст, а не гарантия.</p>
+        </div>
+        <div class="feature reveal">
+          <div class="t">Scalable Architecture</div>
+          <p class="d">Инфраструктура разворачивается на разных нодах/ПК в Docker. Без ручной магии: воспроизводимость важнее хака.</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- Use Cases -->
+    <section id="usecases">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Кому подходит TradeForge</h2>
+          <p class="section-sub">Один движок — три сценария. Выбирай то, что даёт тебе максимальный рычаг: дисциплина, дистрибуция или интеграция.</p>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="feature reveal">
+          <div class="t">Trader</div>
+          <p class="d">Сигнал + risk/invalidation + горизонты 5h/20h/40h → меньше импульсивных входов. Журнал помогает держать дисциплину и видеть ошибки.</p>
+          <div class="mini" style="margin-top:10px;">Фокус: <b>качество решений</b>, а не “угадать цену”.</div>
+        </div>
+
+        <div class="feature reveal">
+          <div class="t">Creator / Community</div>
+          <p class="d">Запускай “свою” витрину и онбординг: trial → тарифы → billing flow. Без обещаний доходности: trust‑first подача + прозрачный риск‑контур.</p>
+          <div class="mini" style="margin-top:10px;">Фокус: <b>доверие + конверсия</b>.</div>
+        </div>
+
+        <div class="feature reveal">
+          <div class="t">Builder / Product</div>
+          <p class="d">Встраивай сигнальный движок в терминал/бота/приложение через API. Масштабируй инфраструктуру (Docker‑ноды) без ручной магии.</p>
+          <div class="mini" style="margin-top:10px;">Фокус: <b>API + масштаб</b>.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Risk Framework -->
+    <section id="risk">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Risk Framework</h2>
+          <p class="section-sub">TradeForge не обещает 100% и не продаёт “иксы”. Мы строим систему, которая снижает вероятность ошибочного входа и работает в режиме контролируемого риска.</p>
+        </div>
+        <span class="pill"><span class="dot"></span>Risk‑first, not hype</span>
+      </div>
+
+      <div class="grid3">
+        <div class="feature reveal">
+          <div class="t">Invalidation always</div>
+          <p class="d">Каждый сигнал приходит с логикой отмены (stop/invalidation). Если сценарий ломается — система признаёт это.</p>
+        </div>
+        <div class="feature reveal">
+          <div class="t">Skip weak setups</div>
+          <p class="d">Мета‑модель чаще выбирает “пропустить”, чем войти в шум. Режимный риск‑контроль — часть продукта.</p>
+        </div>
+        <div class="feature reveal">
+          <div class="t">No guarantees</div>
+          <p class="d">История и бэктесты — это проверяемость и дисциплина, а не обещания. Рынок меняется, риск остаётся.</p>
+        </div>
+      </div>
+
+      <div class="callout reveal" style="margin-top:12px;">
+        <b>Важно:</b> TradeForge — аналитический сервис. Мы не управляем вашими средствами и не даём индивидуальных инвестрекомендаций.
+      </div>
+    </section>
+
+    <!-- Trial -->
+    <section id="trial">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">3‑day Trial</h2>
+          <p class="section-sub">Проверяй продукт в реальном UX: доступ по email‑верификации, затем выбираешь план.</p>
+        </div>
+      </div>
+
+      <div class="trial">
+        <div class="left reveal">
+          <h3 class="h" style="margin:0 0 6px; font-weight:950;">Что ты получаешь за 3 дня</h3>
+          <p class="p" style="margin:0; color: rgba(235,235,235,.70); line-height:1.6;">
+            Trial — это не “пустой демо‑скрин”. Ты видишь реальные слои системы: сигнал, риск‑контур, новостной поток и метрики.
+          </p>
+
+          <ul class="checklist">
+            <li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path class="checkpath" d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              Live витрина: график + вход/выход + LONG/SHORT/FLAT.</li>
+            <li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              Multi‑horizon: 5h / 20h / 40h + meta‑фильтр качества входа.</li>
+            <li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              News & sentiment + crowd‑аналитика как фильтр ловушек.</li>
+            <li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              Risk disclosure + поддержка + onboarding внутри продукта.</li>
+          </ul>
+
+          <div class="hero-ctas" style="margin-top:14px;">
+            <button class="btn primary" id="ctaTrial">Start trial • 3 days</button>
+            <button class="btn" data-protected="demo" id="demoBtnTrial">Открыть демо</button>
+          </div>
+          <div class="disclaimer" style="margin-top:10px;">
+            Trial активируется после email‑верификации. Исторические результаты не гарантируют будущую доходность.
+          </div>
+        </div>
+
+        <div class="right reveal">
+          <div class="section-title" style="margin-bottom:10px;">Trust‑first</div>
+          <ul class="list" style="margin:0;">
+            <li><b>Live API</b>: продукт обновляется в проде, есть health‑check.</li>
+            <li><b>Email verified access</b>: доступ через верификацию почты.</li>
+            <li><b>Risk‑first</b>: сигнал всегда с invalidation/stop.</li>
+            <li><b>Коммерческий контур</b>: trial → тариф → billing flow уже встроен.</li>
+            <li><b>Support 24/7</b>: быстрые ответы и сопровождение.</li>
+          </ul>
+          <div class="paywall" style="margin-top:12px;">
+            <div class="h">Live endpoints</div>
+            <p class="p">Auth: <b>/auth/*</b> • Sub: <b>/subscription/status</b><br/>Billing: <b>/billing/prodamus/create-payment</b> • Health: <b>/health</b></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dashboard -->
+    <section id="dashboard">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Витрина сигналов</h2>
+          <p class="section-sub">Демо‑страница остаётся отдельным разделом сайта и закрыта логином/подпиской.</p>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn small" id="openDemoInline" data-protected="demo">Перейти в демо</button>
+          <a class="btn small" href="/pump-scout/">Pump Scout</a>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="feature reveal">
+          <div class="t">Live Chart</div>
+          <p class="d">График свечей с отметками входа/выхода, слоями сигналов и быстрым переключением таймфреймов.</p>
+        </div>
+        <div class="feature reveal">
+          <div class="t">Signal Panel</div>
+          <p class="d">LONG/SHORT/FLAT, confidence, momentum, volatility regime и invalidation (stop) — всё в одном блоке.</p>
+        </div>
+        <div class="feature reveal">
+          <div class="t">Results</div>
+          <p class="d">Просмотр результатов по годам (equity / maxDD) для двух режимов. Без обещаний доходности.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Modes -->
+    <section id="modes">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Режимы</h2>
+          <p class="section-sub">Два пресета, чтобы выбирать стиль риска. Точные параметры позже “подхватит” backend.</p>
+        </div>
+      </div>
+
+      <div class="modes">
+        <div class="mode">
+          <div class="badge"><span class="dot"></span><span>Conservative</span></div>
+          <h3 class="h">Стабильнее, меньше просадка</h3>
+          <p class="p">ATR • 3x. Мета‑модель строже фильтрует сетапы и чаще выбирает “пропустить сделку”.</p>
+        </div>
+        <div class="mode">
+          <div class="badge"><span class="dot"></span><span>Aggressive</span></div>
+          <h3 class="h">Выше риск, выше потенциальная доходность</h3>
+          <p class="p">(+39% • 3x) — как обозначение режима. Важно: это не гарантия. Риск и просадка выше.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Тариф</h2>
+          <p class="section-sub">Три тарифа: можно оплачивать на 1 / 3 / 6 / 12 месяцев. Чем длиннее период, тем выгоднее итоговая цена. Пробный период 3 дня, затем выбранный план.</p>
+        </div>
+      </div>
+
+      <div class="billing-toggle" id="billingToggle" aria-label="Период оплаты">
+        <button class="billing-tab active" type="button" data-billing-period="monthly">1 месяц</button>
+        <button class="billing-tab" type="button" data-billing-period="quarterly">3 месяца</button>
+        <button class="billing-tab" type="button" data-billing-period="semiannual">6 месяцев</button>
+        <button class="billing-tab" type="button" data-billing-period="yearly">12 месяцев</button>
+      </div>
+
+      <div class="pricing">
+        <div class="price-card" aria-label="TradeForge Starter price card">
+          <div class="price-top">
+            <div>
+              <div class="plan">Starter</div>
+              <div class="per">Сигналы и базовая витрина</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="price" data-price-for="starter">3333 ₽</div>
+              <div class="per" data-price-label-for="starter">/ месяц</div>
+            </div>
+          </div>
+          <div class="hint" data-savings-for="starter">Доступны выгодные планы на 3 / 6 / 12 месяцев.</div>
+
+          <div class="price-body">
+            <ul class="ul">
+              <li>BTCUSDT signals (15m)</li>
+              <li>Dashboard access</li>
+              <li>Basic metrics</li>
+              <li>Manual mode</li>
+            </ul>
+
+            <div class="modal-actions">
+              <button class="btn" data-plan-btn="starter">Choose Starter</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="price-card popular" aria-label="TradeForge Pro price card">
+          <div class="popular-badge">Most Popular</div>
+          <div class="price-top">
+            <div>
+              <div class="plan">Pro</div>
+              <div class="per">Оптимальный баланс цены и фич</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="price" data-price-for="pro">4890 ₽</div>
+              <div class="per" data-price-label-for="pro">/ месяц</div>
+            </div>
+          </div>
+          <div class="hint" data-savings-for="pro">Максимально сбалансированная подписка для старта.</div>
+
+          <div class="price-body">
+            <ul class="ul">
+              <li>Live BTCUSDT signals (15m)</li>
+              <li>Conservative / Aggressive режимы</li>
+              <li>Confidence / Momentum / Volatility</li>
+              <li>News + sentiment feed</li>
+              <li>Yearly results (equity / maxDD)</li>
+            </ul>
+            <div class="modal-actions">
+              <button class="btn primary" id="ctaPricing" data-plan-btn="pro">Start trial • 3 days</button>
+              <button class="btn" id="manageBtn">Аккаунт</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="price-card" aria-label="TradeForge Elite price card">
+          <div class="price-top">
+            <div>
+              <div class="plan">Elite</div>
+              <div class="per">Максимум возможностей</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="price" data-price-for="elite">7890 ₽</div>
+              <div class="per" data-price-label-for="elite">/ месяц</div>
+            </div>
+          </div>
+          <div class="hint" data-savings-for="elite">Лучший вариант, если нужен длинный доступ без ежемесячного продления.</div>
+
+          <div class="price-body">
+            <ul class="ul">
+              <li>Все возможности Pro</li>
+              <li>Priority queue updates</li>
+              <li>Auto-trading ready flow</li>
+              <li>Top priority support</li>
+            </ul>
+            <div class="modal-actions">
+              <button class="btn" data-plan-btn="elite">Choose Elite</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="disclaimer" style="margin-top:10px;">
+        *Backtest +72% за 2025 (3x) — исторический результат, не гарантия будущей доходности.<br/>*Пробный период: 3 дня, далее выбранный тариф. Планы на 3 / 6 / 12 месяцев стоят выгоднее, чем помесячная оплата. *Поддержка 24/7: если не отвечаем за 3 минуты — подписка бесплатно (см. Terms).
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">FAQ</h2>
+          <p class="section-sub">Коротко о том, что это такое и чем не является.</p>
+        </div>
+      </div>
+
+      <div class="faq">
+        <details>
+          <summary>Это автоторговля или сигналы?</summary>
+          <p>И то и другое. Можно использовать <b>сигналы</b> вручную (вход/выход/статус), а при желании подключить <b>автоторговлю</b> через биржевой API — как удобнее.</p>
+        </details>
+        <details>
+          <summary>Есть ли гарантия прибыли?</summary>
+          <p>Новая версия модели ориентирована на стабильность и уже показала <b>исторически +72% за 2025 (3x)</b>*. Это не гарантия будущих результатов.</p>
+        </details>
+        <details>
+          <summary>Как часто обновляются сигналы?</summary>
+          <p>Базовый поток — 15‑минутные свечи. В демо можно переключать таймфрейм отображения.</p>
+        </details>
+        <details>
+          <summary>Что такое Conservative/Aggressive?</summary>
+          <p>Два режима фильтрации/риска: Conservative — строже, Aggressive — смелее. Параметры и расчёт — в backend.</p>
+        </details>
+
+        <details>
+          <summary>Как работает поддержка 24/7?</summary>
+          <p>Поддержка работает <b>24/7</b>. Если мы не ответили в течение <b>3 минут</b> в любое время суток — предоставим подписку бесплатно* (условия — в Terms).</p>
+        </details>
+
+        <details>
+          <summary>Это копитрейдинг?</summary>
+          <p>Нет. TradeForge не копирует чужие сделки. Слой crowd analytics используется как <b>вероятностный фильтр</b>: помогает распознавать типовые ловушки и слабые входы.</p>
+        </details>
+        <details>
+          <summary>Как подтверждается email и зачем это нужно?</summary>
+          <p>Доступ к демо и trial выдаётся после <b>email‑верификации</b>. Это снижает злоупотребления, помогает поддержке и защищает инфраструктуру.</p>
+        </details>
+        <details>
+          <summary>Это “предсказание цены”?</summary>
+          <p>Нет. Мы не обещаем 100%. Система повышает качество решений: объединяет независимые источники и добавляет <b>risk‑контур</b> (invalidation/stop), чтобы уменьшать вероятность ошибочного входа.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- Legal / Payment Compliance -->
+    <section id="legal">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Контакты, оплата и условия сервиса</h2>
+          <p class="section-sub">Раздел для идентификации продавца и правил оказания цифровых услуг. Нужен для платежных шлюзов и прозрачной работы с клиентом.</p>
+        </div>
+        <span class="pill"><span class="dot"></span>Payment / Legal</span>
+      </div>
+
+      <div class="grid3">
+        <div class="feature reveal legal-card">
+          <div class="t">Контактные данные</div>
+          <ul class="legal-list">
+            <li><b>Проект:</b> TradeForge</li>
+            <li><b>Email поддержки:</b> support@tradeforge.art</li>
+            <li><b>Telegram поддержки:</b> <a href="https://t.me/TRADE_FORGE333" target="_blank" rel="noreferrer">@TRADE_FORGE333</a></li>
+            <li><b>Документы:</b> <a href="/offer.html">Публичная оферта</a> / <a href="/refund.html">Политика возврата</a> / <a href="/privacy.html">Политика данных</a></li>
+          </ul>
+        </div>
+
+        <div class="feature reveal legal-card">
+          <div class="t">Описание услуг и стоимость</div>
+          <ul class="legal-list">
+            <li><b>Услуга:</b> доступ к веб‑платформе TradeForge с аналитикой BTCUSDT, сигналами моделей, dashboard, market radar и новостным слоем.</li>
+            <li><b>Trial:</b> 3 дня бесплатно после email‑верификации.</li>
+            <li><b>Starter:</b> 3333 ₽ / 1 месяц, 8990 ₽ / 3 месяца, 16990 ₽ / 6 месяцев, 29990 ₽ / 12 месяцев</li>
+            <li><b>Pro:</b> 4890 ₽ / 1 месяц, 13290 ₽ / 3 месяца, 24990 ₽ / 6 месяцев, 43990 ₽ / 12 месяцев</li>
+            <li><b>Elite:</b> 7890 ₽ / 1 месяц, 21490 ₽ / 3 месяца, 39990 ₽ / 6 месяцев, 69990 ₽ / 12 месяцев</li>
+            <li><b>Формат:</b> цифровая подписка, доступ предоставляется онлайн после оплаты.</li>
+            <li><b>Способы оплаты:</b> Prodamus / СБП и иные явно указанные на сайте способы.</li>
+          </ul>
+        </div>
+
+        <div class="feature reveal legal-card">
+          <div class="t">Реквизиты продавца</div>
+          <ul class="legal-list">
+            <li><b>Статус:</b> Самозанятая</li>
+            <li><b>ФИО:</b> ФРЕЙ ВЕРОНИКА ВЛАДИМИРОВНА</li>
+            <li><b>ИНН:</b> 774314304392</li>
+          </ul>
+          <div class="disclaimer" style="margin-top:10px;">
+            Полные банковские реквизиты и условия оплаты вынесены в публичную оферту.
+          </div>
+        </div>
+      </div>
+
+      <div class="trial" style="margin-top:12px;">
+        <div class="left reveal legal-card">
+          <h3 class="h" style="margin:0 0 10px;">Заказ и предоставление услуг</h3>
+          <ul class="legal-list">
+            <li>Пользователь регистрируется на сайте и подтверждает email.</li>
+            <li>После этого активируется trial либо оформляется платный заказ по выбранному тарифу.</li>
+            <li>Доступ предоставляется удалённо через сайт TradeForge и связанные API/интерфейсы.</li>
+            <li>Trial активируется сразу после подтверждения email, платный доступ — после подтверждения оплаты.</li>
+            <li>Подписка действует в течение оплаченного периода и может быть не продлена пользователем на следующий цикл.</li>
+            <li>Сервис носит аналитический характер и не является гарантией прибыли или индивидуальной инвестиционной рекомендацией.</li>
+          </ul>
+        </div>
+
+        <div class="right reveal legal-card">
+          <h3 class="h" style="margin:0 0 10px;">Возврат / отказ от покупки</h3>
+          <ul class="legal-list">
+            <li>Пользователь вправе отказаться от дальнейшего продления подписки до начала следующего оплаченного периода.</li>
+            <li>Если доступ к цифровой услуге не был предоставлен по вине сервиса, пользователь может обратиться в поддержку для возврата средств.</li>
+            <li>После фактической активации цифрового доступа и начала оказания услуги возврат за уже начавшийся период рассматривается индивидуально по обращению в поддержку.</li>
+            <li>Для обращения по возврату или спорной ситуации необходимо написать на <b>support@tradeforge.art</b> или в Telegram поддержки.</li>
+            <li>В обращении нужно указать email аккаунта, дату и сумму оплаты, а также причину запроса.</li>
+            <li>Срок рассмотрения обращения — до 10 рабочих дней, срок возврата после одобрения — до 10 рабочих дней.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <div class="foot">
+        <div>© <span id="year"></span> TradeForge</div>
+        <div style="display:flex; gap: 14px; flex-wrap: wrap;">
+          <a href="/offer.html">Оферта</a>
+          <a href="/refund.html">Возврат</a>
+          <a href="/privacy.html">Политика данных</a>
+          <a href="#legal" id="termsLink">Terms</a>
+          <a href="#legal" id="privacyLink">Privacy</a>
+          <a href="#" id="openDemoFoot" data-protected="demo">Demo</a>
+          <a href="https://t.me/TRADE_FORGE333" target="_blank" rel="noreferrer">Support Telegram</a>
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        Условия сервиса, продления подписки и SLA поддержки — в разделе Terms. Онлайн-поддержка: <a href="https://t.me/TRADE_FORGE333" target="_blank" rel="noreferrer">@TRADE_FORGE333</a>.
+      </div>
+    </footer>
+  </div>
+
+  <!-- Sticky CTA (mobile) -->
+  <div class="sticky-cta" aria-label="Sticky CTA">
+    <div class="inner">
+      <div class="txt">
+        <b>Trial 3 days • Plans from $30</b>
+        <span>Доступ к демо‑витрине сигналов</span>
+      </div>
+      <button class="btn primary" id="ctaSticky">Start trial • 3 days</button>
+    </div>
+  </div>
+  <div id="landing-modal-root">
+<!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Auth + Paywall modal -->
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Authentication modal">
+    <div class="modal" role="document">
+      <div class="modal-head">
+        <div class="modal-title" id="modalTitle">Access</div>
+        <button class="x" id="closeModal" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 6 18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="tabs" id="authTabs">
+          <div class="tab active" data-tab="signup">Sign up</div>
+          <div class="tab" data-tab="login">Log in</div>
+        </div>
+
+        <!-- Signup -->
+        <form class="form" id="signupForm" autocomplete="on">
+          <div class="modal-actions" style="margin-bottom:8px;">
+            <button class="btn" type="button" id="signupYandexBtn">Войти через Яндекс</button>
+          </div>
+          <div class="row">
+            <label for="suEmail">Email</label>
+            <input id="suEmail" type="email" placeholder="you@email.com" required />
+          </div>
+          <div class="row">
+            <label for="suPass">Password</label>
+            <input id="suPass" type="password" placeholder="Минимум 10 символов" required />
+            <div class="hint">Рекомендуется: 10+ символов, цифра и спецсимвол.</div>
+          </div>
+          <div class="row">
+            <label for="suPass2">Confirm password</label>
+            <input id="suPass2" type="password" placeholder="Повтори пароль" required />
+          </div>
+
+          <div class="check">
+            <input id="suTerms" type="checkbox" />
+            <div class="txt">
+              Я согласен с <button class="linklike" type="button" id="termsBtnInline">Terms</button> и <button class="linklike" type="button" id="privacyBtnInline">Privacy</button>.
+            </div>
+          </div>
+
+          <div class="error" id="suErr"></div>
+          <div class="row" id="suVerifyWrap" style="display:none;">
+            <label for="suCode">Email verification code</label>
+            <input id="suCode" type="text" inputmode="numeric" placeholder="6-digit code" />
+            <div class="hint">Код отправлен на email. Действует 15 минут.</div>
+            <div class="modal-actions" style="margin-top:8px;">
+              <button class="btn primary" type="button" id="suVerifyBtn">Подтвердить email</button>
+              <button class="btn" type="button" id="suResendBtn">Отправить код снова</button>
+            </div>
+          </div>
+
+          <div class="verified-badge" id="suVerifiedBadge" role="status" aria-live="polite">
+            <span class="ic" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <div>
+              <b>Email verified.</b> Trial активирован. Ниже — оформление доступа (если нужен платный план).
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn primary" type="submit" id="suSubmit">Create account</button>
+            <button class="btn" type="button" id="goLogin">Уже есть аккаунт</button>
+          </div>
+
+          <div class="paywall" id="paywallBlock" style="display:none;">
+            <div class="h">Оформить доступ</div>
+            <p class="p" id="paywallPlanText">План <b>TradeForge Pro</b>: <b>3 дня trial</b>, затем <b>4890 ₽ / месяц</b>. Оплата в рублях через Prodamus / СБП.</p>
+            <div class="pay-addr" id="billingInfoBlock">
+              <div class="k">Оплата в рублях</div>
+              <div class="v">Prodamus / СБП. Доступ активируется после подтверждения оплаты.</div>
+            </div>
+            <div class="modal-actions" style="margin-top:10px;">
+              <button class="btn primary" type="button" id="contactSupportBtn">Оплатить через Prodamus</button>
+              <button class="btn" type="button" id="skipPayBtn">Не сейчас</button>
+            </div>
+            <div class="disclaimer" style="margin-top:8px;">
+              После успешной оплаты доступ активируется автоматически.
+            </div>
+          </div>
+        </form>
+
+        <!-- Login -->
+        <form class="form" id="loginForm" autocomplete="on" style="display:none;">
+          <div class="modal-actions" style="margin-bottom:8px;">
+            <button class="btn" type="button" id="loginYandexBtn">Войти через Яндекс</button>
+          </div>
+          <div class="row">
+            <label for="liEmail">Email</label>
+            <input id="liEmail" type="email" placeholder="you@email.com" required />
+          </div>
+          <div class="row">
+            <label for="liPass">Password</label>
+            <input id="liPass" type="password" placeholder="Пароль" required />
+          </div>
+
+          <div class="error" id="liErr"></div>
+          <div class="row" id="liVerifyWrap" style="display:none;">
+            <label for="liCode">Email verification code</label>
+            <input id="liCode" type="text" inputmode="numeric" placeholder="6-digit code" />
+            <div class="hint">Подтверди email кодом из письма.</div>
+            <div class="modal-actions" style="margin-top:8px;">
+              <button class="btn primary" type="button" id="liVerifyBtn">Подтвердить email</button>
+              <button class="btn" type="button" id="liResendBtn">Отправить код снова</button>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn primary" type="submit" id="liSubmit">Sign in</button>
+            <button class="btn" type="button" id="goSignup">Создать аккаунт</button>
+          </div>
+
+          <div style="margin-top:8px;">
+            <button class="linklike" type="button" id="forgotBtn">Forgot password?</button>
+          </div>
+          <div class="row" id="liResetWrap" style="display:none; margin-top:10px;">
+            <label for="liResetCode">Reset code</label>
+            <input id="liResetCode" type="text" inputmode="numeric" placeholder="6-digit code" />
+            <label for="liResetPass" style="margin-top:8px;">New password</label>
+            <input id="liResetPass" type="password" placeholder="Новый пароль (минимум 10 символов)" />
+            <div class="modal-actions" style="margin-top:8px;">
+              <button class="btn primary" type="button" id="liResetBtn">Сбросить пароль</button>
+            </div>
+          </div>
+
+          <div class="paywall" id="paywallLogin" style="display:none;">
+            <div class="h">Подписка не активна</div>
+            <p class="p" id="paywallLoginText">Чтобы открыть демо, активируй trial 3 дня, затем <b>4890 ₽ / месяц</b> через Prodamus / СБП.</p>
+            <div class="pay-addr">
+              <div class="k">Оплата в рублях</div>
+              <div class="v">Prodamus / СБП. После подтверждения оплаты доступ будет активирован.</div>
+            </div>
+            <div class="modal-actions" style="margin-top:10px;">
+              <button class="btn primary" type="button" id="contactSupportBtn2">Оплатить через Prodamus</button>
+              <button class="btn" type="button" id="logoutBtn">Logout</button>
+            </div>
+          </div>
+        </form>
+
+        <div class="form" id="accountPanel" style="display:none;">
+          <div class="paywall" style="display:block;">
+            <div class="h">Аккаунт TradeForge</div>
+            <p class="p">Здесь видно, какой у тебя план, активна ли подписка и до какого срока она действует.</p>
+          </div>
+
+          <div class="pay-addr">
+            <div class="k">Email</div>
+            <div class="v" id="accEmail">—</div>
+          </div>
+
+          <div class="pay-addr">
+            <div class="k">План</div>
+            <div class="v" id="accPlan">—</div>
+          </div>
+
+          <div class="pay-addr">
+            <div class="k">Статус подписки</div>
+            <div class="v" id="accStatus">—</div>
+          </div>
+
+          <div class="pay-addr">
+            <div class="k">Активна до</div>
+            <div class="v" id="accExpires">—</div>
+          </div>
+
+          <div class="pay-addr">
+            <div class="k">ФИО</div>
+            <input class="inp" id="accFullName" type="text" placeholder="Иван Иванов" autocomplete="name" />
+          </div>
+
+          <div class="pay-addr">
+            <div class="k">Telegram</div>
+            <input class="inp" id="accTelegram" type="text" placeholder="@nickname или ссылка" autocomplete="off" />
+          </div>
+
+          <div class="pay-addr">
+            <div class="k">Обновлена</div>
+            <div class="v" id="accUpdated">—</div>
+          </div>
+
+          <div class="pay-addr">
+            <div class="k">Client ID</div>
+            <div class="v" id="accUserId">—</div>
+          </div>
+
+          <div class="pay-addr">
+            <div class="k">Support code</div>
+            <div class="v" id="accSupportCode">—</div>
+          </div>
+
+          <div class="pay-addr">
+            <div class="k">Последний платёж</div>
+            <div class="v" id="accPaymentSummary">—</div>
+          </div>
+
+          <div class="pay-addr">
+            <div class="k">Текущий txid / order</div>
+            <div class="v" id="accTxid">—</div>
+          </div>
+
+          <div class="pay-addr">
+            <div class="k">Выбранный тариф</div>
+            <div class="v" id="accSelectedPlan">TradeForge Pro • 4890 ₽ / месяц</div>
+          </div>
+
+          <div class="modal-actions" style="margin-top:12px;">
+            <button class="btn" type="button" data-account-plan="starter">Starter</button>
+            <button class="btn primary" type="button" data-account-plan="pro">Pro</button>
+            <button class="btn" type="button" data-account-plan="elite">Elite</button>
+          </div>
+
+          <div class="disclaimer" id="accHint" style="margin-top:8px;">
+            Если подписка не активна, ниже можно сразу перейти к оплате.
+          </div>
+
+          <div class="modal-actions" style="margin-top:12px;">
+            <button class="btn" type="button" id="accountCopySupportBtn">Скопировать данные для поддержки</button>
+            <button class="btn" type="button" id="accountSaveBtn">Сохранить профиль</button>
+            <button class="btn primary" type="button" id="accountPayBtn">Оплатить через Prodamus</button>
+            <button class="btn" type="button" id="accountDemoBtn">Открыть демо</button>
+            <button class="btn" type="button" id="accountLogoutBtn">Выйти</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  </div>
+
+    <script src="/landing-core.js?v=20260327e" defer></script>
+  <script>
+    (function cleanupLegacySW(){
+      if (!("serviceWorker" in navigator)) return;
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.getRegistrations()
+          .then((regs) => Promise.all((regs || []).map((reg) => reg.unregister().catch(() => false))))
+          .catch(() => {});
+      });
+    })();
+  </script>
+  <script src="/landing-ui.js?v=20260328a" defer></script>
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+      m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+      m[i].l=1*new Date();
+      for (var j = 0; j < document.scripts.length; j++) { if (document.scripts[j].src === r) { return; } }
+      k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a);
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=108276909', 'ym');
+    ym(108276909, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/108276909" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
+  <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+      var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+      s1.async=true;
+      s1.src='https://embed.tawk.to/69c6c43078f08b1c35658ae8/1jko6so4r';
+      s1.charset='UTF-8';
+      s1.setAttribute('crossorigin','*');
+      s0.parentNode.insertBefore(s1,s0);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,2748 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TradeForge • Screener</title>
+
+  <style>:root{
+      --bg: #050608;
+      --panel: rgba(10,12,14,.86);
+      --panel2: rgba(8,10,12,.78);
+      --stroke: rgba(255,255,255,.08);
+      --stroke2: rgba(255,255,255,.12);
+      --text: rgba(235,235,235,.92);
+      --muted: rgba(235,235,235,.60);
+
+      --gold: #b99b4a;
+      --gold2: #e1c26a;
+
+      --radius: 16px;
+      --radius2: 12px;
+
+      --glow: 0 0 0 1px rgba(185,155,74,.30),
+              0 0 18px rgba(185,155,74,.18),
+              0 0 44px rgba(185,155,74,.10);
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+
+      --dash: rgba(255,255,255,.16);
+      --good: rgba(120,255,220,.92);
+      --bad: rgba(255,120,120,.92);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", sans-serif;
+      background:
+        radial-gradient(1200px 600px at 20% -20%, rgba(80,90,140,.25), transparent 60%),
+        radial-gradient(900px 500px at 80% 0%, rgba(120,90,40,.22), transparent 55%),
+        radial-gradient(800px 480px at 70% 85%, rgba(40,120,110,.14), transparent 55%),
+        var(--bg);
+    }
+
+    /* App frame */
+    .frame{
+      width: min(1240px, calc(100% - 44px));
+      margin: 22px auto;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .frame::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(900px 300px at 50% 0%, rgba(185,155,74,.12), transparent 60%);
+      pointer-events:none;
+    }
+
+    /* Top bar */
+    .topbar{
+      position: relative;
+      z-index: 2;
+      display:flex;
+      align-items:center;
+      gap:18px;
+      padding: 14px 18px;
+      background: rgba(0,0,0,.52);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      backdrop-filter: blur(10px);
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 190px;
+    }
+    .brand svg{ width:32px; height:32px; filter: drop-shadow(0 0 16px rgba(150,255,220,.10)); }
+    .brand .name{
+      font-weight: 800;
+      letter-spacing: .10em;
+      font-size: 20px;
+      opacity:.95;
+    }
+    .nav{
+      display:flex;
+      gap:26px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .nav a{
+      color:inherit; text-decoration:none;
+      padding: 8px 10px;
+      border-radius: 10px;
+      transition: .15s ease;
+    }
+    .nav a:hover{ color: var(--text); background: rgba(255,255,255,.04); }
+    .nav a.active{
+      color: var(--text);
+      position: relative;
+    }
+    .nav a.active::after{
+      content:"";
+      position:absolute; left:10px; right:10px; bottom:-10px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(185,155,74,.9), transparent);
+      filter: blur(.1px);
+    }
+
+    .top-actions{
+      margin-left:auto;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .mobile-app-nav{
+      display:none;
+      position:sticky;
+      top:0;
+      z-index:49;
+      padding:8px 10px;
+      gap:8px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      background:rgba(7,8,10,.78);
+      border-bottom:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(12px);
+    }
+    .mobile-app-nav::-webkit-scrollbar{ display:none; }
+    .mobile-app-link{
+      flex:0 0 auto;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:36px;
+      padding:0 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(20,22,26,.55);
+      color:rgba(235,235,235,.86);
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.04em;
+      white-space:nowrap;
+      text-decoration:none;
+    }
+    .mobile-app-link.active{
+      border-color: rgba(185,155,74,.55);
+      background: linear-gradient(180deg, rgba(185,155,74,.18), rgba(20,22,26,.55));
+      box-shadow: 0 0 0 1px rgba(185,155,74,.25), 0 12px 40px rgba(185,155,74,.08);
+      color: var(--text);
+    }
+    .icon-btn{
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      transition:.15s ease;
+    }
+    .icon-btn:hover{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
+    .icon-btn svg{ width:18px; height:18px; opacity:.9; }
+
+    .explain-pill{
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      display:flex;
+      align-items:center;
+      gap:8px;
+      cursor:pointer;
+      transition:.15s ease;
+    }
+    .explain-pill:hover{ box-shadow: 0 0 0 1px rgba(255,255,255,.10); }
+    .explain-pill .badge{
+      width:10px; height:10px; border-radius:3px;
+      background: linear-gradient(135deg, rgba(185,155,74,.95), rgba(140,255,220,.70));
+      box-shadow: 0 0 18px rgba(185,155,74,.20);
+    }
+    .explain-pill span{ font-weight:700; letter-spacing:.06em; font-size: 13px; opacity:.95; }
+
+    /* Main layout */
+    .content{
+      display:grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 650px;
+      background: rgba(0,0,0,.55);
+    }
+
+    /* Sidebar */
+    .sidebar{
+      padding: 16px 14px;
+      border-right: 1px solid rgba(255,255,255,.06);
+      background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.55));
+    }
+    .side-card{
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(0,0,0,.40);
+      padding: 12px;
+      box-shadow: 0 12px 34px rgba(0,0,0,.35);
+    }
+    .side-title{
+      font-size: 12px;
+      letter-spacing: .10em;
+      color: rgba(230,230,230,.85);
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      margin-bottom: 12px;
+    }
+    .field label{
+      font-size: 11px;
+      color: rgba(255,255,255,.55);
+      letter-spacing:.06em;
+      text-transform: uppercase;
+    }
+    .input, .select{
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      padding: 0 10px;
+      outline: none;
+      transition: .15s ease;
+      font-weight: 600;
+    }
+    .input:focus, .select:focus{
+      border-color: rgba(185,155,74,.45);
+      box-shadow: 0 0 0 3px rgba(185,155,74,.12);
+    }
+
+    .checks{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top: 2px;
+    }
+    .check{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color: rgba(235,235,235,.78);
+      font-size: 12px;
+      user-select:none;
+    }
+    .check input{ accent-color: rgba(185,155,74,.85); }
+
+    .btn{
+      width: 100%;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.30));
+      color: rgba(230,230,230,.86);
+      font-weight: 800;
+      letter-spacing: .10em;
+      cursor:pointer;
+      transition:.15s ease;
+      text-transform: uppercase;
+    }
+    .btn:hover{ filter: brightness(1.05); }
+    .btn.primary{
+      border-color: rgba(185,155,74,.45);
+      background: linear-gradient(180deg, rgba(185,155,74,.20), rgba(0,0,0,.25));
+      color: rgba(255,245,220,.92);
+      box-shadow: var(--glow);
+    }
+
+    .hint{
+      margin-top: 10px;
+      padding: 10px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.02);
+      color: rgba(255,255,255,.55);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+    .hint code{
+      color: rgba(255,245,220,.85);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+    }
+
+    /* Main panel */
+    .main{
+      padding: 16px 16px 14px;
+    }
+
+    .toolbar{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .status-pill{
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.03);
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color: rgba(235,235,235,.78);
+      font-weight: 800;
+      letter-spacing:.06em;
+      font-size: 12px;
+    }
+    .dot{
+      width:10px; height:10px; border-radius: 50%;
+      background: rgba(120,255,220,.9);
+      box-shadow: 0 0 18px rgba(120,255,220,.12);
+    }
+    .dot.off{
+      background: rgba(255,255,255,.20);
+      box-shadow: none;
+    }
+
+    .sheet{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.35);
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+      overflow: hidden;
+    }
+
+    .sheet-scroll{
+      overflow:auto;
+      max-height: calc(100vh - 220px);
+      /* чтобы всегда было удобно скроллить */
+      scrollbar-color: rgba(185,155,74,.30) rgba(255,255,255,.05);
+    }
+    .sheet-scroll::-webkit-scrollbar{ height: 10px; width: 10px; }
+    .sheet-scroll::-webkit-scrollbar-thumb{ background: rgba(185,155,74,.30); border-radius: 999px; }
+    .sheet-scroll::-webkit-scrollbar-track{ background: rgba(255,255,255,.05); border-radius: 999px; }
+
+    /* Табличная сетка (как Excel) */
+    .grid{
+      min-width: 1180px; /* на маленьких экранах появится горизонтальный скролл */
+    }
+    .grid-header, .grid-row{
+      display:grid;
+      grid-template-columns: 240px repeat(7, 120px) 200px;
+      align-items:center;
+    }
+
+    .grid-header{
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: rgba(0,0,0,.70);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(10px);
+    }
+
+    .hcell{
+      padding: 10px 10px;
+      font-size: 11px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      color: rgba(235,235,235,.72);
+      font-weight: 900;
+      white-space:nowrap;
+    }
+    .hcell.center{ text-align:center; }
+    .hcell.split{ border-left: 1px dashed var(--dash); }
+
+    .grid-row{
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      background: rgba(255,255,255,.01);
+    }
+    .grid-row:nth-child(even){ background: rgba(255,255,255,.02); }
+    .grid-row:hover{ background: rgba(185,155,74,.06); }
+    .market-mode-perp .grid-header, .market-mode-perp .grid-row{
+      grid-template-columns: 240px 120px 200px;
+    }
+    .market-mode-perp .grid-header .hcell:nth-child(2),
+    .market-mode-perp .grid-header .hcell:nth-child(3),
+    .market-mode-perp .grid-header .hcell:nth-child(5),
+    .market-mode-perp .grid-header .hcell:nth-child(6),
+    .market-mode-perp .grid-header .hcell:nth-child(7),
+    .market-mode-perp .grid-header .hcell:nth-child(8),
+    .market-mode-perp .grid-row > .cell:nth-child(2),
+    .market-mode-perp .grid-row > .cell:nth-child(3),
+    .market-mode-perp .grid-row > .cell:nth-child(5),
+    .market-mode-perp .grid-row > .cell:nth-child(6),
+    .market-mode-perp .grid-row > .cell:nth-child(7),
+    .market-mode-perp .grid-row > .cell:nth-child(8){
+      display:none;
+    }
+
+    .cell{
+      padding: 9px 10px;
+      font-size: 12px;
+      color: rgba(235,235,235,.86);
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space:nowrap;
+    }
+    .cell.center{ text-align:center; }
+    .cell.split{ border-left: 1px dashed var(--dash); }
+    .cell.muted{ color: rgba(255,255,255,.42); }
+
+    .coin{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .coin img{
+      width: 18px; height: 18px;
+      border-radius: 6px;
+      flex: 0 0 auto;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
+    .coin .sym{
+      font-weight: 900;
+      letter-spacing: .06em;
+      color: rgba(255,245,220,.92);
+    }
+    .coin .name{
+      color: rgba(255,255,255,.52);
+      font-size: 11px;
+      margin-left: 6px;
+    }
+
+    .badge-ex{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height: 20px;
+      padding: 0 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      font-size: 10px;
+      letter-spacing:.08em;
+      color: rgba(255,255,255,.65);
+      font-weight: 900;
+    }
+    .badge-ex.active{
+      border-color: rgba(185,155,74,.45);
+      background: rgba(185,155,74,.10);
+      color: rgba(255,245,220,.92);
+      box-shadow: 0 0 0 1px rgba(185,155,74,.08) inset;
+    }
+
+    .momentum{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 8px;
+    }
+    .momentum .pair{
+      color: rgba(255,255,255,.55);
+      font-size: 11px;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space:nowrap;
+    }
+    .momentum .pct{
+      font-weight: 900;
+      letter-spacing:.04em;
+    }
+    .momentum .pct.good{ color: var(--good); }
+    .momentum .pct.bad{ color: var(--bad); }
+
+    .cell.buy{
+      background: linear-gradient(90deg, rgba(60,140,110,.18), rgba(60,140,110,.06));
+      border-color: rgba(120,255,220,.35);
+      color: rgba(215,255,245,.95);
+    }
+    .cell.sell{
+      background: linear-gradient(90deg, rgba(160,80,80,.20), rgba(160,80,80,.06));
+      border-color: rgba(255,120,120,.35);
+      color: rgba(255,220,220,.95);
+    }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.72);
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(235,235,235,.92);
+      padding: 10px 12px;
+      border-radius: 12px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+      backdrop-filter: blur(10px);
+      opacity: 0;
+      pointer-events:none;
+      transition: .18s ease;
+      font-size: 13px;
+      z-index: 20;
+    }
+    .toast.show{ opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+    @media (max-width: 980px){
+      .content{ grid-template-columns: 1fr; }
+      .nav{ display:none; }
+      .sidebar{ border-right: 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+      .sheet-scroll{ max-height: calc(100vh - 320px); }
+    }
+  
+    
+
+/* ============================================================
+       TradeForge Dashboard v2 — premium polish (styles only)
+       - keeps all ids + JS/API logic intact
+       ============================================================ */
+
+    html{ scroll-behavior: smooth; }
+    :focus-visible{
+      outline: 2px solid rgba(185,155,74,.55);
+      outline-offset: 3px;
+      border-radius: 12px;
+    }
+
+    body::before{
+      content:"";
+      position: fixed;
+      inset: -2px;
+      pointer-events:none;
+      opacity: .55;
+      background:
+        radial-gradient(900px 520px at 12% 12%, rgba(140,255,220,.08), transparent 60%),
+        radial-gradient(900px 520px at 85% 10%, rgba(185,155,74,.10), transparent 60%),
+        linear-gradient(transparent 0, transparent 22px, rgba(255,255,255,.035) 23px),
+        linear-gradient(90deg, transparent 0, transparent 22px, rgba(255,255,255,.035) 23px);
+      background-size: auto, auto, 24px 24px, 24px 24px;
+      mix-blend-mode: screen;
+      filter: blur(.2px);
+      transform: translateZ(0);
+      mask-image: radial-gradient(1000px 600px at 50% 20%, rgba(0,0,0,1), rgba(0,0,0,.30) 65%, rgba(0,0,0,0) 86%);
+      z-index: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      html{ scroll-behavior:auto; }
+      body::before{ display:none; }
+      *{ animation:none !important; transition:none !important; }
+    }
+
+    .frame{
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015));
+      border-color: rgba(255,255,255,.10);
+      box-shadow: 0 26px 110px rgba(0,0,0,.58);
+      isolation:isolate;
+    }
+    .frame::before{
+      opacity: .95;
+      background:
+        radial-gradient(1000px 320px at 30% 0%, rgba(140,255,220,.08), transparent 60%),
+        radial-gradient(900px 320px at 70% 0%, rgba(185,155,74,.13), transparent 60%);
+    }
+
+    .topbar{
+      background: rgba(0,0,0,.56);
+      border-bottom-color: rgba(255,255,255,.09);
+      box-shadow: 0 14px 50px rgba(0,0,0,.35);
+    }
+    .brand .name{
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .nav a{
+      border: 1px solid transparent;
+      background: rgba(255,255,255,.0);
+    }
+    .nav a:hover{
+      border-color: rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+    }
+
+    .side-card,
+    .chart-wrap{
+      position: relative;
+      overflow:hidden;
+      transition: border-color .14s ease, background .14s ease;
+    }
+    .side-card:hover,
+    .chart-wrap:hover{
+      border-color: rgba(185,155,74,.18);
+      background: rgba(255,255,255,.02);
+    }
+
+    .decision{
+      border-color: rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.30));
+    }
+    .decision-cell{
+      background: rgba(255,255,255,.03);
+      border-color: rgba(255,255,255,.08);
+    }
+
+    .news-item{
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(255,255,255,.025);
+      transition: .15s ease;
+    }
+    .news-item:hover{
+      border-color: rgba(185,155,74,.20);
+      background: rgba(255,255,255,.04);
+    }
+
+    .results-grid{
+      gap: 8px 10px;
+    }
+    .results-grid .hdr{
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: 11px;
+    }
+
+    .ghost-overlay{ opacity: .07; }
+
+    .reveal{
+      opacity: 0;
+      transform: translateY(10px);
+      filter: blur(2px);
+      transition: opacity .55s ease, transform .55s ease, filter .75s ease;
+      will-change: opacity, transform, filter;
+    }
+    .reveal.in{
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+
+    .haptic{
+      animation: hapticTap .22s cubic-bezier(.18,.86,.18,1);
+      box-shadow: 0 22px 70px rgba(0,0,0,.40), 0 0 0 1px rgba(255,255,255,.10) inset;
+    }
+    @keyframes hapticTap{
+      0%{ transform: translateY(0) scale(1); }
+      35%{ transform: translateY(1px) scale(.985); }
+      100%{ transform: translateY(0) scale(1); }
+    }
+
+    @media (max-width: 520px){
+      .topbar{
+        height: auto;
+        padding: 10px 12px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .brand{ min-width: auto; flex: 1 1 100%; }
+      .top-actions{
+        width: 100%;
+        margin-left: 0;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .explain-pill{ flex: 1 1 auto; justify-content:center; }
+      .content{ padding: 10px 10px 8px; }
+      .chart-wrap{ border-radius: 18px; }
+      .side-card{ border-radius: 18px; }
+      .decision-grid{ grid-template-columns: 1fr 1fr; }
+      .decision-cell .v{ font-size: 16px; }
+      .news-list{ max-height: 42vh; }
+    }
+
+    @media (max-width: 1100px) and (orientation: landscape) and (max-height: 520px){
+      .topbar{ padding: 6px 10px; }
+    }
+
+  
+
+
+    /* ============================================================
+       TradeForge Screener v2 — page-specific layout
+       ============================================================ */
+    .hero-head{
+      display:flex;
+      align-items:flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .hero-kicker{
+      display:flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items:center;
+      margin-bottom: 10px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      color: rgba(235,235,235,.72);
+      font-weight: 800;
+      letter-spacing:.06em;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .pill .dot{
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(120,255,220,.9);
+      box-shadow: 0 0 18px rgba(120,255,220,.12);
+    }
+    .pill.gold{
+      border-color: rgba(185,155,74,.35);
+      background: rgba(185,155,74,.10);
+      color: rgba(255,245,220,.92);
+      box-shadow: 0 0 0 1px rgba(185,155,74,.06) inset;
+    }
+    .hero-title{
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: -0.03em;
+    }
+    .hero-sub{
+      margin: 6px 0 0;
+      color: rgba(235,235,235,.62);
+      font-size: 13px;
+      line-height: 1.55;
+      max-width: 780px;
+    }
+    .hero-actions{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+    .hero-actions .btn{
+      width: auto;
+      padding: 0 14px;
+      height: 40px;
+      border-radius: 12px;
+    }
+
+    .side-card, .sheet{
+      position: relative;
+      overflow:hidden;
+      transition: border-color .14s ease, background .14s ease;
+    }
+    .side-card:hover, .sheet:hover{
+      border-color: rgba(185,155,74,.18);
+      background: rgba(255,255,255,.02);
+    }
+
+    /* Responsive: match dashboard feel */
+    @media (max-width: 980px){
+      .content{ grid-template-columns: 1fr; }
+      .nav{ display:none; }
+      .mobile-app-nav{ display:flex; }
+      .sidebar{ border-right: 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+      .hero-head{ flex-direction: column; align-items:flex-start; }
+      .hero-actions{ width: 100%; justify-content:flex-start; }
+      .hero-actions .btn{ width: 100%; }
+      .sheet-scroll{ max-height: calc(100vh - 360px); }
+    }
+    @media (max-width: 520px){
+      .frame{ width: 100%; margin: 0; border-radius: 0; }
+      .topbar{ padding: 10px 12px; gap: 12px; flex-wrap: wrap; }
+      .brand{ min-width: auto; }
+      .top-actions{ width: 100%; margin-left: 0; justify-content:flex-start; flex-wrap: wrap; gap: 10px; }
+      .sidebar{ padding: 12px 12px; }
+      .main{ padding: 12px 12px 12px; }
+      .hero-title{ font-size: 24px; }
+      .hero-sub{ font-size: 12.8px; }
+      .hero-kicker{ flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 6px;
+        mask-image: linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,1) 8%, rgba(0,0,0,1) 92%, rgba(0,0,0,0));
+      }
+      .hero-kicker::-webkit-scrollbar{ display:none; }
+      .pill{ flex: 0 0 auto; }
+      .sheet-scroll{ max-height: calc(100vh - 420px); }
+    }
+    @media (max-height: 520px) and (orientation: landscape){
+      .hero-sub{ display:none; }
+      .sheet-scroll{ max-height: calc(100vh - 250px); }
+    }
+
+
+    /* v4: match dashboard scaling */
+    .frame{
+      width: min(1500px, calc(100% - 18px));
+      margin: 12px auto;
+    }
+
+  
+    /* v5: dashboard-like layout (main first, sidebar right) */
+    .content{
+      grid-template-columns: 1fr 320px;
+    }
+    .sidebar{
+      border-right: 0;
+      border-left: 1px solid rgba(255,255,255,.06);
+    }
+    @media (max-width: 980px){
+      .content{ grid-template-columns: 1fr; }
+      .sidebar{ border-left: 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+    }
+
+  
+    /* v6 fix: ensure topbar is closed + stays at top */
+    .topbar{ position: sticky; top: 0; z-index: 50; }
+
+  
+
+    /* ------------------------------------------------------------
+       v7 layout fix: match dashboard proportions + proper columns
+       ------------------------------------------------------------ */
+    .frame{
+      width: min(1500px, calc(100% - 18px));
+      margin: 12px auto;
+    }
+    .content{
+      grid-template-columns: 1fr 360px; /* main wide, sidebar right */
+      min-height: auto; /* remove forced empty space */
+    }
+    .sidebar{
+      grid-column: 2;
+      border-right: 0;
+      border-left: 1px solid rgba(255,255,255,.06); /* separator close to left */
+    }
+    .main{
+      grid-column: 1;
+    }
+
+    /* Align internal panel widths and reduce bottom empty */
+    .sheet-scroll{ max-height: calc(100vh - 250px); }
+    .main{ padding-bottom: 10px; }
+    .sidebar{ padding-bottom: 12px; }
+
+    @media (max-width: 980px){
+      .content{ grid-template-columns: 1fr; }
+      .sidebar{ grid-column:auto; border-left: 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+      .main{ grid-column:auto; }
+      .sheet-scroll{ max-height: calc(100vh - 360px); }
+    }
+
+
+    /* ------------------------------------------------------------
+       v8 hard layout override — remove empty black space, match dashboard
+       ------------------------------------------------------------ */
+    .content{
+      grid-template-columns: 1fr 360px;
+      min-height: auto;
+      align-items: stretch;
+    }
+    .main{
+      grid-column: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0; /* allow children to flex/scroll */
+    }
+    .sidebar{
+      grid-column: 2;
+      border-right: 0;
+      border-left: 1px solid rgba(255,255,255,.06);
+      min-height: 0;
+    }
+
+    /* Make the sheet fill available height, so content starts at top */
+    .sheet{
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    .sheet-scroll{
+      flex: 1 1 auto;
+      max-height: none; /* no artificial clamp on desktop */
+      min-height: 220px;
+    }
+
+    /* Desktop: keep sidebar scrollable if long */
+    .sidebar{
+      max-height: calc(100vh - 86px);
+      overflow: auto;
+      scrollbar-color: rgba(185,155,74,.30) rgba(255,255,255,.05);
+    }
+
+    @media (max-width: 980px){
+      .content{ grid-template-columns: 1fr; }
+      .sidebar{
+        grid-column: auto;
+        border-left: 0;
+        border-bottom: 1px solid rgba(255,255,255,.06);
+        max-height: none;
+      }
+      .sheet-scroll{ max-height: calc(100vh - 360px); }
+    }
+
+  
+
+    @media (max-width: 760px){
+      .frame{
+        width:100% !important;
+        margin:0 !important;
+        border-radius:0 !important;
+        min-height:100svh !important;
+      }
+      .topbar{
+        padding:10px 12px !important;
+        flex-wrap:wrap !important;
+        gap:10px !important;
+      }
+      .nav{
+        display:none !important;
+      }
+      .mobile-app-nav{
+        display:flex !important;
+        width:100% !important;
+        padding:10px 12px !important;
+      }
+      .top-actions{
+        width:100% !important;
+        margin-left:0 !important;
+        display:grid !important;
+        grid-template-columns:40px 40px minmax(0, 1fr) !important;
+        gap:10px !important;
+      }
+      .top-actions .explain-pill{
+        width:100% !important;
+        min-width:0 !important;
+        justify-content:center !important;
+      }
+      .content{
+        grid-template-columns:1fr !important;
+      }
+      .sidebar{
+        grid-column:auto !important;
+        order:2 !important;
+        border-left:0 !important;
+        border-bottom:1px solid rgba(255,255,255,.06) !important;
+        max-height:none !important;
+        padding:12px !important;
+      }
+      .main{
+        grid-column:auto !important;
+        order:1 !important;
+        padding:12px !important;
+      }
+      .hero-head{
+        gap:12px !important;
+      }
+      .hero-title{
+        font-size: 26px !important;
+        line-height: 1.02 !important;
+      }
+      .hero-sub{
+        font-size: 13px !important;
+        line-height: 1.45 !important;
+      }
+      .hero-actions{
+        display:grid !important;
+        grid-template-columns:1fr 1fr !important;
+        gap:10px !important;
+      }
+      .hero-actions .window-tabs{
+        grid-column:1 / -1 !important;
+        overflow-x:auto !important;
+        -webkit-overflow-scrolling:touch !important;
+        padding-bottom:2px !important;
+      }
+      .hero-actions .btn{
+        width:100% !important;
+      }
+      .toolbar{
+        flex-wrap:wrap !important;
+      }
+      .status-pill{
+        width:100% !important;
+        justify-content:space-between !important;
+      }
+      .sheet{
+        margin-top: 2px !important;
+      }
+      .sheet-scroll{
+        min-height:420px !important;
+        max-height:none !important;
+      }
+      .grid{
+        min-width: 100% !important;
+      }
+    }
+
+    
+       ============================================================ */
+    .frame{ width: min(1500px, calc(100% - 18px)) !important; margin: 12px auto !important; }
+    .content{
+      grid-template-columns: 1fr 360px !important;
+      min-height: 0 !important;
+      align-items: stretch !important;
+    }
+    .main{ padding: 16px 16px 14px !important; display:flex !important; flex-direction:column !important; gap: 12px !important; min-height:0 !important; }
+    .sidebar{
+      padding: 16px 14px !important;
+      border-right: 0 !important;
+      border-left: 1px solid rgba(255,255,255,.06) !important;
+      background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.55)) !important;
+      max-height: calc(100vh - 86px) !important;
+      overflow:auto !important;
+      min-height: 0 !important;
+    }
+    /* ensure main table occupies space, not stuck at bottom */
+    .sheet{ display:flex !important; flex-direction:column !important; flex: 1 1 auto !important; min-height: 0 !important; }
+    .sheet-scroll{ flex: 1 1 auto !important; max-height: none !important; min-height: 260px !important; }
+
+    /* Explainer card */
+    .explainer{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.28));
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+      padding: 14px 14px;
+    }
+    .ex-title{
+      font-weight: 950;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+      font-size: 13px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.88);
+    }
+    .ex-grid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .ex-item{
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.22);
+      padding: 10px 10px;
+    }
+    .ex-item .k{
+      font-size: 12px;
+      color: rgba(235,235,235,.62);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .10em;
+    }
+    .ex-item .d{
+      font-size: 12.8px;
+      color: rgba(235,235,235,.72);
+      line-height: 1.5;
+    }
+    .ex-note{
+      margin-top: 10px;
+      font-size: 12px;
+      color: rgba(235,235,235,.55);
+      line-height: 1.5;
+    }
+
+    /* Empty state */
+    #rows:empty + #emptyState{ display:block; }
+    .empty{
+      display:none;
+      margin-top: 12px;
+      border-radius: 16px;
+      border: 1px dashed rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      padding: 14px;
+      text-align:center;
+    }
+    .empty .t{ font-weight: 950; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .empty .d{ color: rgba(235,235,235,.62); font-size: 12.5px; line-height:1.5; }
+
+    /* Mobile: sidebar stacked under topbar like dashboard */
+    @media (max-width: 980px){
+      .content{ grid-template-columns: 1fr !important; }
+      .sidebar{
+        border-left: 0 !important;
+        border-bottom: 1px solid rgba(255,255,255,.06) !important;
+        max-height: none !important;
+      }
+      .ex-grid{ grid-template-columns: 1fr; }
+    }
+
+
+    /* ============================================================
+       v10 LAYOUT: match reference (sidebar LEFT, table RIGHT) + dashboard scale
+       - design only; no JS/id changes
+       ============================================================ */
+    .frame{
+      width: min(1500px, calc(100% - 18px)) !important;
+      margin: 12px auto !important;
+    }
+    .content{
+      grid-template-columns: 320px 1fr !important; /* sidebar left */
+      min-height: 0 !important;
+      align-items: stretch !important;
+    }
+
+    .sidebar{
+      grid-column: 1 !important;
+      padding: 16px 14px !important;
+      border-left: 0 !important;
+      border-right: 1px solid rgba(255,255,255,.06) !important; /* separator like reference */
+      background: linear-gradient(180deg, rgba(0,0,0,.36), rgba(0,0,0,.58)) !important;
+      min-height: 0 !important;
+      max-height: calc(100vh - 86px) !important; /* under topbar */
+      overflow: auto !important;
+      scrollbar-color: rgba(185,155,74,.30) rgba(255,255,255,.05);
+    }
+
+    .main{
+      grid-column: 2 !important;
+      padding: 16px 16px 14px !important;
+      display:flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+      min-height: 0 !important;
+    }
+
+    /* Table panel fills height so there's no "black empty screen" */
+    .sheet{
+      display:flex !important;
+      flex-direction: column !important;
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+    }
+    .sheet-scroll{
+      flex: 1 1 auto !important;
+      max-height: none !important; /* desktop: let it grow */
+      min-height: 360px !important;
+    }
+
+    /* Empty state: keep (it helps UX when no data) */
+    #rows:empty + #emptyState{ display:block; }
+    .empty{
+      display:none;
+      margin-top: 12px;
+      border-radius: 16px;
+      border: 1px dashed rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      padding: 14px;
+      text-align:center;
+    }
+    .empty .t{ font-weight: 950; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .empty .d{ color: rgba(235,235,235,.62); font-size: 12.5px; line-height:1.5; }
+
+    /* Mobile: stack like dashboard */
+    @media (max-width: 980px){
+      .content{ grid-template-columns: 1fr !important; }
+      .sidebar{
+        grid-column: auto !important;
+        border-right: 0 !important;
+        border-bottom: 1px solid rgba(255,255,255,.06) !important;
+        max-height: none !important;
+      }
+      .main{ grid-column: auto !important; }
+      .sheet-scroll{ max-height: calc(100vh - 360px) !important; min-height: 260px !important; }
+    }
+
+
+
+    /* Screener legend */
+    .legend{
+      margin-top: 10px;
+      display:flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items:center;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
+      color: rgba(235,235,235,.70);
+      font-size: 12px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .chip .dot{
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(120,255,220,.9);
+      box-shadow: 0 0 18px rgba(120,255,220,.12);
+    }
+    .chip.gold{
+      border-color: rgba(185,155,74,.28);
+      background: rgba(185,155,74,.10);
+      color: rgba(255,245,220,.92);
+    }
+
+
+
+    /* Cinematic: window tabs */
+    .window-tabs{
+      display:flex;
+      gap: 6px;
+      padding: 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+    .window-tabs .tab{
+      border: 1px solid transparent;
+      background: rgba(255,255,255,.03);
+      color: rgba(235,235,235,.74);
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: .02em;
+      cursor:pointer;
+      transition: .15s ease;
+    }
+    .window-tabs .tab:hover{
+      border-color: rgba(185,155,74,.18);
+      background: rgba(255,255,255,.05);
+    }
+    .window-tabs .tab.active{
+      border-color: rgba(185,155,74,.32);
+      background: rgba(185,155,74,.12);
+      color: rgba(255,245,220,.92);
+      box-shadow: 0 0 0 1px rgba(185,155,74,.06) inset;
+    }
+
+    /* Cinematic: row heat + rising badge */
+    .row{ position: relative; }
+    .row::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius: 12px;
+      pointer-events:none;
+      opacity: 0;
+      background: radial-gradient(520px 120px at 20% 50%, rgba(140,255,220,.08), transparent 60%),
+                  radial-gradient(520px 120px at 80% 50%, rgba(185,155,74,.10), transparent 60%);
+      transition: opacity .18s ease;
+      z-index: 0;
+    }
+    .row:hover::before{ opacity: 1; }
+    .row > *{ position: relative; z-index: 1; }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(140,255,220,.18);
+      background: rgba(140,255,220,.06);
+      color: rgba(140,255,220,.92);
+      font-size: 11px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+    .badge .dot{
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(140,255,220,.95);
+      box-shadow: 0 0 14px rgba(140,255,220,.18);
+    }
+    .badge.gold{
+      border-color: rgba(185,155,74,.28);
+      background: rgba(185,155,74,.12);
+      color: rgba(255,245,220,.92);
+    }
+
+    /* Heat levels apply to the delta cell */
+    .heat-1{ color: rgba(140,255,220,.78) !important; }
+    .heat-2{ color: rgba(140,255,220,.92) !important; }
+    .heat-3{ color: rgba(185,155,74,.92) !important; }
+    .heat-4{ color: rgba(255,208,120,.95) !important; text-shadow: 0 0 18px rgba(185,155,74,.14); }
+    .heat-5{ color: rgba(255,235,190,.98) !important; text-shadow: 0 0 28px rgba(185,155,74,.20); }
+
+    /* Mobile: tabs wrap nicely */
+    @media (max-width: 520px){
+      .window-tabs{ width: 100%; justify-content: space-between; }
+      .window-tabs .tab{ flex: 1 1 auto; text-align:center; }
+    }
+
+
+
+    /* v13 cinematic upgrades */
+    .hot-pill{
+      border-color: rgba(185,155,74,.28) !important;
+      background: linear-gradient(180deg, rgba(185,155,74,.12), rgba(0,0,0,.18)) !important;
+      color: rgba(255,245,220,.95) !important;
+      box-shadow: 0 0 0 1px rgba(185,155,74,.06) inset, 0 12px 36px rgba(0,0,0,.24);
+    }
+    .hot-pill .dot{
+      background: rgba(255,210,120,.95) !important;
+      box-shadow: 0 0 16px rgba(185,155,74,.24);
+    }
+
+    .badge.gold{
+      position: relative;
+      overflow: hidden;
+      animation: pulseGold 1.9s ease-in-out infinite;
+    }
+    .badge.gold::after{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: linear-gradient(110deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,245,220,.12) 22%,
+        rgba(255,255,255,0) 42%,
+        rgba(255,255,255,0) 100%);
+      transform: translate3d(-120%,0,0);
+      animation: badgeShine 2.8s ease-in-out infinite;
+      pointer-events:none;
+      mix-blend-mode: screen;
+    }
+    @keyframes pulseGold{
+      0%,100%{ transform: scale(1); box-shadow: 0 0 0 1px rgba(185,155,74,.06) inset; }
+      50%{ transform: scale(1.02); box-shadow: 0 0 0 1px rgba(185,155,74,.08) inset, 0 0 18px rgba(185,155,74,.12); }
+    }
+    @keyframes badgeShine{
+      0%, 58%{ transform: translate3d(-120%,0,0); }
+      100%{ transform: translate3d(120%,0,0); }
+    }
+
+    /* Slight premium emphasis on table header */
+    .grid-header{
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      backdrop-filter: blur(12px);
+      background: linear-gradient(180deg, rgba(12,12,14,.92), rgba(12,12,14,.84));
+    }
+
+    /* Final mobile pass: keep one coherent phone layout after legacy overrides */
+    @media (max-width: 760px){
+      html,
+      body{
+        height:auto !important;
+        min-height:100% !important;
+        overflow:auto !important;
+      }
+      .frame{
+        width:100% !important;
+        margin:0 !important;
+        min-height:100svh !important;
+        border-radius:0 !important;
+        overflow:visible !important;
+      }
+      .topbar{
+        height:auto !important;
+        padding:10px 12px !important;
+        gap:10px !important;
+        flex-wrap:wrap !important;
+      }
+      .brand{
+        min-width:auto !important;
+        flex:1 1 100% !important;
+      }
+      .nav{
+        display:none !important;
+      }
+      .mobile-app-nav{
+        display:flex !important;
+        position:relative !important;
+        inset:auto !important;
+        width:100% !important;
+        padding:10px 12px !important;
+        background:rgba(7,8,10,.88) !important;
+        border-bottom:1px solid rgba(255,255,255,.08) !important;
+      }
+      .top-actions{
+        width:100% !important;
+        margin-left:0 !important;
+        display:grid !important;
+        grid-template-columns:40px 40px minmax(0, 1fr) !important;
+        gap:10px !important;
+      }
+      .top-actions .explain-pill{
+        width:100% !important;
+        min-width:0 !important;
+        justify-content:center !important;
+      }
+      .content{
+        display:grid !important;
+        grid-template-columns:1fr !important;
+        min-height:auto !important;
+        height:auto !important;
+        padding:10px 10px calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+        gap:12px !important;
+      }
+      .main{
+        order:1 !important;
+        display:flex !important;
+        flex-direction:column !important;
+        gap:12px !important;
+        padding:0 !important;
+        width:100% !important;
+        max-width:100% !important;
+        min-height:0 !important;
+        min-width:0 !important;
+        overflow:hidden !important;
+      }
+      .sidebar{
+        order:2 !important;
+        display:block !important;
+        padding:0 !important;
+        border-right:0 !important;
+        border-left:0 !important;
+        border-bottom:0 !important;
+        max-height:none !important;
+        overflow:visible !important;
+        background:transparent !important;
+      }
+      .side-card{
+        border-radius:18px !important;
+      }
+      .hero-head{
+        display:flex !important;
+        flex-direction:column !important;
+        gap:12px !important;
+      }
+      .hero-title{
+        font-size:28px !important;
+        line-height:1.02 !important;
+      }
+      .hero-sub{
+        font-size:13px !important;
+        line-height:1.45 !important;
+      }
+      .hero-actions{
+        display:grid !important;
+        grid-template-columns:1fr 1fr !important;
+        gap:10px !important;
+      }
+      .window-tabs{
+        grid-column:1 / -1 !important;
+        overflow-x:auto !important;
+        -webkit-overflow-scrolling:touch !important;
+        padding-bottom:2px !important;
+      }
+      .toolbar{
+        flex-wrap:wrap !important;
+      }
+      .status-pill{
+        width:100% !important;
+        justify-content:space-between !important;
+      }
+      .ex-grid{
+        grid-template-columns:1fr !important;
+      }
+      .sheet{
+        display:flex !important;
+        flex-direction:column !important;
+        width:100% !important;
+        min-height:0 !important;
+        min-width:0 !important;
+      }
+      .sheet-scroll{
+        width:100% !important;
+        max-width:100% !important;
+        min-height:440px !important;
+        max-height:none !important;
+        overflow:auto !important;
+        overflow-y:auto !important;
+        overflow-x:auto !important;
+        -webkit-overflow-scrolling:touch !important;
+      }
+      .grid{
+        width:max-content !important;
+        min-width:920px !important;
+      }
+    }
+
+</style>
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+      (function(m,e,t,r,i,k,a){
+          m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+          m[i].l=1*new Date();
+          for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+          k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+      })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=108276909', 'ym');
+
+      ym(108276909, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+  </script>
+  <!-- /Yandex.Metrika counter -->
+</head>
+
+<body>
+  <noscript><div><img src="https://mc.yandex.ru/watch/108276909" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <div class="frame">
+    <div class="topbar">
+      <div class="brand">
+        <!-- simple logo -->
+        <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <path d="M14 50c6-17 12-28 18-34 8 7 14 19 18 34" stroke="rgba(140,255,220,.75)" stroke-width="3" stroke-linecap="round"/>
+          <path d="M18 50h28" stroke="rgba(185,155,74,.9)" stroke-width="3" stroke-linecap="round"/>
+          <path d="M26 30c2 2 6 2 8 0 3-3 7-3 10 0" stroke="rgba(235,235,235,.35)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <div class="name">TradeForge</div>
+      </div>
+
+      <nav class="nav">
+        <a href="/dashboard/">BTC Engine</a>
+        <a class="active" href="/screener/" title="Live screener">Market Radar</a>
+        <a href="/pump-scout/" title="Отдельный модуль Pump Scout">Pump Scout</a>
+        <a href="/how-to-use/#reports" title="Reports & audit">Reports</a>
+        <a href="/how-to-use/" title="How to use">How to use</a>
+        <a href="/settings/" title="Settings & integrations">Settings</a>
+      </nav>
+
+      <div class="top-actions">
+        <button class="icon-btn" id="refreshBtn" title="Обновить" aria-label="Обновить">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M20 12a8 8 0 1 1-2.34-5.66" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M20 4v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="userBtn" title="Профиль" aria-label="Профиль">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M20 21a8 8 0 1 0-16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button class="explain-pill" id="explainBtn" title="Explain">
+          <span class="badge"></span><span>Explain</span>
+        </button>
+      </div>
+    
+
+    </div>
+
+    <nav class="mobile-app-nav" aria-label="Навигация по модулям">
+      <a class="mobile-app-link" href="/dashboard/">BTC Engine</a>
+      <a class="mobile-app-link active" href="/screener/">Market Radar</a>
+      <a class="mobile-app-link" href="/pump-scout/">Pump Scout</a>
+      <a class="mobile-app-link" href="/how-to-use/#reports">Reports</a>
+      <a class="mobile-app-link" href="/how-to-use/">How to use</a>
+      <a class="mobile-app-link" href="/settings/">Settings</a>
+    </nav>
+
+    <div class="content">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="side-card reveal">
+          <div class="side-title">
+            <span>FILTERS</span>
+            <span class="badge-ex active" id="activeCount">3/7</span>
+          </div>
+
+          <div class="field">
+            <label for="search">Search symbol</label>
+            <input class="input" id="search" placeholder="BTC, ETH, SOL…" />
+          </div>
+
+          <div class="field">
+            <label for="feedMode">Feed mode</label>
+            <select class="select" id="feedMode">
+              <option value="spot" selected>Classic spot radar</option>
+              <option value="mexc_perp">MEXC perpetual pump/dump</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="sort">Sort</label>
+            <select class="select" id="sort">
+              <option value="momentum" selected>Top growth / strength</option>
+              <option value="pumpscore">Pump score</option>
+              <option value="dump">Top decline / weakness</option>
+              <option value="pop">Market rank</option>
+              <option value="vol">Volume 24h</option>
+              <option value="bestbuy" data-spot-only="1">Lowest live ask</option>
+              <option value="bestsell" data-spot-only="1">Highest live bid</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="minVol">Min volume (24h), $</label>
+            <input class="input" id="minVol" placeholder="например 1000000" inputmode="numeric" />
+          </div>
+          <div class="field">
+            <label for="alertPct">Spread alert, %</label>
+            <input class="input" id="alertPct" placeholder="например 0.50" inputmode="decimal" />
+          </div>
+
+          <div class="checks">
+            <label class="check">
+              <input type="checkbox" id="only2plus" checked />
+              2+ live venues
+            </label>
+            <label class="check">
+              <input type="checkbox" id="onlyPositive" />
+              Only rising
+            </label>
+            <label class="check">
+              <input type="checkbox" id="enableAlerts" />
+              Enable move alerts
+            </label>
+          </div>
+
+          <div style="height:10px"></div>
+
+          <button class="btn primary" id="applyBtn">APPLY</button>
+          <button class="btn" id="demoBtn" style="margin-top:10px">DEMO DATA</button>
+
+          <div class="hint">
+            Spot mode uses live quotes from <b>BYBIT</b>, <b>BITGET</b>, <b>MEXC</b>.<br/>
+            Perpetual mode uses live <b>MEXC</b> contract data only.<br/><br/>
+            Бэкенд подключается через <code>API_BASE</code> внизу.
+          </div>
+          <div class="hint" id="modeHint">
+            Classic spot radar is best for general market strength. Switch to MEXC perpetual mode only when you want fast alt pump/dump scanning.
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="main">
+        <div class="hero-head">
+          <div>
+            <div class="hero-kicker">
+              <span class="pill"><span class="dot"></span>Live market feed</span>
+              <span class="pill gold">Spot radar + MEXC perp</span>
+              <span class="pill">Shortlist, not noise</span>
+            </div>
+            <h1 class="hero-title">Market Screener</h1>
+            <p class="hero-sub">Read the market in one pass: broad spot strength in classic mode, then fast alt pump and dump contracts in MEXC perpetual mode when you need a tighter feed.</p>
+          </div>
+          <div class="hero-actions">
+            <div class="window-tabs" role="tablist" aria-label="Time window">
+              <button class="tab active" type="button" data-win="24h">24H</button>
+              <button class="tab" type="button" data-win="7d">7D</button>
+              <button class="tab" type="button" data-win="30d">30D</button>
+              <button class="tab" type="button" data-win="90d">90D</button>
+            </div>
+            <button class="btn primary" id="pumpToggleBtn" type="button">Pump Mode</button>
+            <button class="btn" id="dumpToggleBtn" type="button">Dump Mode</button>
+            <button class="btn" id="resetViewBtn" type="button">Reset</button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="status-pill" title="Статус данных">
+            <span class="dot" id="dotLive"></span>
+            <span id="statusText">DEMO • 500 монет</span>
+          </div>
+                    <div class="status-pill hot-pill" id="hotPill" title="Hot movers">
+            <span class="dot"></span>
+            <span id="hotCount">HOT • 0</span>
+          </div>
+<div class="status-pill" title="Последнее обновление">
+            <span style="opacity:.7">TS</span>
+            <span id="tsText">—</span>
+          </div>
+        </div>
+<div class="ex-grid">
+            <div class="ex-item">
+              <div class="k">Goal</div>
+              <div class="d">Surface real market movers cleanly: which coins are strengthening, which are fading, and where current live pricing confirms the move.</div>
+            </div>
+            <div class="ex-item">
+              <div class="k">How to read</div>
+              <div class="d"><b><span id="deltaHdr">Δ 24H</span></b> shows the active move for the selected market mode. In classic mode it tracks spot strength; in MEXC perpetual mode it tracks pump/dump performance by contract.</div>
+            </div>
+            <div class="ex-item">
+              <div class="k">Pump / Dump presets</div>
+              <div class="d">Quick presets for fast scanning. Pump mode isolates rising movers, while Dump mode isolates the heaviest current declines without changing the page structure.</div>
+            </div>
+          </div>
+          <div class="ex-note">This is a live market radar and research tool. It highlights strength and weakness; it does not guarantee profit and does not place orders.</div>
+        </div>
+
+<div class="sheet reveal">
+          <div class="sheet-scroll">
+            <div class="grid" id="grid">
+              <!-- header -->
+              <div class="grid-header">
+                <div class="hcell">COIN</div>
+
+                <div class="hcell center split">
+                  <span class="badge-ex active">BYBIT</span>
+                </div>
+                <div class="hcell center split">
+                  <span class="badge-ex active">BITGET</span>
+                </div>
+                <div class="hcell center split">
+                  <span class="badge-ex active">MEXC</span>
+                </div>
+
+                <div class="hcell center split"><span class="badge-ex">OKX</span></div>
+                <div class="hcell center split"><span class="badge-ex">BINGX</span></div>
+                <div class="hcell center split"><span class="badge-ex">BITMART</span></div>
+                <div class="hcell center split"><span class="badge-ex">COINEX</span></div>
+
+                <div class="hcell split">MOVE</div>
+              </div>
+
+              <!-- rows rendered here -->
+              <div id="rows"></div>
+
+              <div class="empty" id="emptyState">
+                <div class="t">No matches</div>
+                <div class="d">Adjust filters or load demo data to preview the table.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ------------------------------------------------------------
+    // UI micro-interactions (Screener) — no API logic touched
+    // ------------------------------------------------------------
+    (function(){
+      const prefersReduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const revealEls = Array.from(document.querySelectorAll('.reveal'));
+      if (!prefersReduce && 'IntersectionObserver' in window){
+        const io = new IntersectionObserver((entries)=>{
+          for (const e of entries){
+            if (e.isIntersecting){
+              e.target.classList.add('in');
+              io.unobserve(e.target);
+            }
+          }
+        }, { threshold: 0.12, rootMargin: '80px' });
+        revealEls.forEach(el => io.observe(el));
+      } else {
+        revealEls.forEach(el => el.classList.add('in'));
+      }
+
+      const btns = Array.from(document.querySelectorAll('button'));
+      btns.forEach(b=>{
+        b.addEventListener('click', ()=>{
+          if (prefersReduce) return;
+          b.classList.remove('haptic');
+          void b.offsetWidth;
+          b.classList.add('haptic');
+          setTimeout(()=> b.classList.remove('haptic'), 260);
+        }, { passive:true });
+      });
+
+      // UX-only preset: "Rising alt" (no backend changes)
+      const pumpBtn = document.getElementById('pumpToggleBtn');
+      const dumpBtn = document.getElementById('dumpToggleBtn');
+      const resetBtn = document.getElementById('resetViewBtn');
+      const sortEl = document.getElementById('sort');
+      const onlyPos = document.getElementById('onlyPositive');
+      const applyBtn = document.getElementById('applyBtn');
+
+      if (pumpBtn && sortEl && onlyPos && applyBtn){
+        pumpBtn.addEventListener('click', ()=>{
+          document.getElementById('feedMode').value = 'mexc_perp';
+          state.feedMode = 'mexc_perp';
+          sortEl.value = 'pumpscore';
+          setWindow('24h');
+          onlyPos.checked = true;
+          document.getElementById('minVol').value = '500000';
+          updateFeedModeUi();
+          loadAll();
+        });
+      }
+      if (dumpBtn && sortEl && onlyPos && applyBtn){
+        dumpBtn.addEventListener('click', ()=>{
+          document.getElementById('feedMode').value = 'mexc_perp';
+          state.feedMode = 'mexc_perp';
+          sortEl.value = 'dump';
+          setWindow('24h');
+          onlyPos.checked = false;
+          updateFeedModeUi();
+          loadAll();
+        });
+      }
+      if (resetBtn){
+        resetBtn.addEventListener('click', ()=>{
+          try{
+            document.getElementById('feedMode').value = 'spot';
+            document.getElementById('search').value = '';
+            document.getElementById('minVol').value = '';
+            document.getElementById('alertPct').value = '';
+            document.getElementById('only2plus').checked = true;
+            document.getElementById('onlyPositive').checked = false;
+            document.getElementById('enableAlerts').checked = false;
+            document.getElementById('sort').value = 'momentum';
+            setWindow('24h');
+            updateFeedModeUi();
+            loadAll();
+          }catch(_){}
+        });
+      }
+    })();
+  </script>
+
+  <script>
+    // ====== CONFIG ======
+    const __host = location.hostname || "";
+    const __isLocal = (__host === "localhost" || __host === "127.0.0.1");
+    let API_BASE = __isLocal
+      ? `${location.protocol}//${__host}:8000`
+      : `${location.protocol}//api.${__host.replace(/^www\./, "")}`;
+    const REFRESH_MS = 30000;
+    const RADAR_CACHE_KEY = "tradeforge.market_radar.cache.v2";
+    const RADAR_CACHE_TTL_MS = 90 * 1000;
+    const SCREENER_BOOTSTRAP_TTL_MS = 15 * 1000;
+
+    const EXCHANGES = ["BYBIT","BITGET","MEXC","OKX","BINGX","BITMART","COINEX"];
+
+    // ====== UI HELPERS ======
+    const toastEl = document.getElementById("toast");
+    let toastTimer = null;
+    function toast(msg){
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1400);
+    }
+
+    function fmtNum(n){
+      if (n === null || n === undefined || Number.isNaN(n)) return "—";
+      try{
+        return new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(n);
+      }catch{
+        return String(n);
+      }
+    }
+    function fmtPrice(p){
+      if (p === null || p === undefined || Number.isNaN(p)) return "—";
+      const abs = Math.abs(p);
+      const digits = abs >= 1000 ? 2 : abs >= 1 ? 4 : 8;
+      return new Intl.NumberFormat("en-US", { minimumFractionDigits: 0, maximumFractionDigits: digits }).format(p);
+    }
+
+    function coinIconUrl(symbol){
+      // Локальный кэш через API (если нет в кэше — сервер попробует скачать и сохранить)
+      return `${API_BASE}/market/icon/${String(symbol).toUpperCase()}`;
+    }
+    function fallbackIcon(symbol){
+      const letter = String(symbol || "?").trim().charAt(0).toUpperCase() || "?";
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+          <rect width="32" height="32" rx="8" ry="8" fill="#1b1e22"/>
+          <text x="16" y="21" text-anchor="middle" font-size="14" font-family="Arial" fill="#cfcfcf">${letter}</text>
+        </svg>`;
+      return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+    }
+
+    // ====== STATE ======
+    const els = {
+      rows: document.getElementById("rows"),
+      statusText: document.getElementById("statusText"),
+      tsText: document.getElementById("tsText"),
+      dotLive: document.getElementById("dotLive"),
+      search: document.getElementById("search"),
+      sort: document.getElementById("sort"),
+      minVol: document.getElementById("minVol"),
+      alertPct: document.getElementById("alertPct"),
+      only2plus: document.getElementById("only2plus"),
+      onlyPositive: document.getElementById("onlyPositive"),
+      enableAlerts: document.getElementById("enableAlerts"),
+      applyBtn: document.getElementById("applyBtn"),
+      demoBtn: document.getElementById("demoBtn"),
+      refreshBtn: document.getElementById("refreshBtn"),
+      activeCount: document.getElementById("activeCount")
+    };
+
+    const state = {
+      mode: "demo", // demo | api
+      feedMode: "spot", // spot | mexc_perp
+      coins: [],
+      prices: {},   // prices[EXCHANGE][SYMBOL]=number|null (recommended: ask)
+      book: {},     // book[EXCHANGE][SYMBOL] = { bid, ask }
+      momentums: {},  // momentums[SYMBOL] = { grossPct, netPct, buyEx, sellEx, buyAsk, sellBid, exCount }
+      rows: [],     // prepared rows with computed momentum
+      lastTs: null,
+      lastAlertTs: {},
+      win: "24h"
+    };
+    let latestLoadToken = 0;
+    let latestRefreshToken = 0;
+    const screenerBootstrapCache = new Map();
+
+    // Cinematic window (UX-only for now)
+    const winLabels = { "24h":"Δ 24H", "7d":"Δ 7D", "30d":"Δ 30D", "90d":"Δ 90D" };
+    function setWindow(win){
+      state.win = win;
+      const hdr = document.getElementById("deltaHdr");
+      if (hdr) hdr.textContent = winLabels[win] || "Δ 24H";
+      const tabs = Array.from(document.querySelectorAll(".window-tabs .tab"));
+      tabs.forEach(t => t.classList.toggle("active", t.getAttribute("data-win") === win));
+    }
+    function wireWindowTabs(){
+      const tabs = Array.from(document.querySelectorAll(".window-tabs .tab"));
+      if (!tabs.length) return;
+      tabs.forEach(t=>{
+        t.addEventListener("click", ()=>{
+          setWindow(t.getAttribute("data-win") || "24h");
+          if (state.feedMode === "mexc_perp"){
+            loadAll();
+          } else {
+            applyView();
+          }
+        }, { passive:true });
+      });
+      setWindow("24h");
+    }
+
+    function activeExchanges(){
+      return state.feedMode === "mexc_perp" ? new Set(["MEXC"]) : new Set(["BYBIT","BITGET","MEXC"]);
+    }
+
+    function updateFeedModeUi(){
+      const active = activeExchanges();
+      const tabs = Array.from(document.querySelectorAll(".window-tabs .tab"));
+      const isPerp = state.feedMode === "mexc_perp";
+      document.body.classList.toggle("market-mode-perp", isPerp);
+      document.body.classList.toggle("market-mode-spot", !isPerp);
+      if (!isPerp && state.win !== "24h"){
+        setWindow("24h");
+      }
+      tabs.forEach((tab, idx) => {
+        const enabled = isPerp || idx === 0;
+        tab.disabled = !enabled;
+        tab.style.opacity = enabled ? "1" : ".45";
+        tab.style.cursor = enabled ? "pointer" : "default";
+      });
+      els.activeCount.textContent = state.feedMode === "mexc_perp" ? "1/1" : `${active.size}/3`;
+      const statusSuffix = state.feedMode === "mexc_perp" ? "MEXC PERP" : "SPOT";
+      if (state.mode === "api"){
+        els.statusText.textContent = `LIVE • ${statusSuffix} • ${state.coins.length} symbols`;
+      }
+      const cells = Array.from(document.querySelectorAll(".grid-header .badge-ex"));
+      cells.forEach((el) => {
+        const ex = String(el.textContent || "").trim().toUpperCase();
+        el.classList.toggle("active", active.has(ex));
+      });
+      const only2Label = document.getElementById("only2plus")?.closest(".check");
+      if (only2Label){
+        only2Label.style.opacity = state.feedMode === "mexc_perp" ? "0.45" : "1";
+      }
+      const modeHint = document.getElementById("modeHint");
+      if (modeHint){
+        modeHint.innerHTML = isPerp
+          ? 'MEXC perpetual mode shows only live MEXC contract movers. Best for finding fast alt <b>pump</b> and <b>dump</b> structures.'
+          : 'Classic spot radar shows broad market strength across live spot venues. Best for reading which coins are generally rising or fading.';
+      }
+      const sortEl = document.getElementById("sort");
+      const spotOnlyOpts = Array.from(sortEl.querySelectorAll('option[data-spot-only="1"]'));
+      spotOnlyOpts.forEach((opt) => {
+        opt.hidden = isPerp;
+      });
+      if (isPerp && (sortEl.value === "bestbuy" || sortEl.value === "bestsell" || sortEl.value === "pop")){
+        sortEl.value = "momentum";
+      }
+    }
+
+    function heatLevel(pct){
+      const a = Math.abs(pct);
+      if (a >= 12) return 5;
+      if (a >= 7) return 4;
+      if (a >= 4) return 3;
+      if (a >= 2) return 2;
+      if (a >= 1) return 1;
+      return 0;
+    }
+    function setStatus({ mode, ts }){
+      state.mode = mode;
+      els.dotLive.classList.toggle("off", mode !== "api");
+      const scope = state.feedMode === "mexc_perp" ? "MEXC PERP" : "SPOT";
+      els.statusText.textContent = (mode === "api" ? "LIVE" : "DEMO") + ` • ${scope} • ${state.coins.length} symbols`;
+      els.tsText.textContent = ts ? new Date(ts * 1000).toLocaleString() : "—";
+      updateFeedModeUi();
+    }
+
+    function feedLimit(){
+      return state.feedMode === "mexc_perp" ? 120 : 180;
+    }
+
+    // ====== DATA FETCH (замените под ваш бекенд) ======
+    function apiHeaders(){ return {}; }
+
+    async function loadRuntimeConfig(){ return; }
+
+    async function fetchWithTimeout(url, opts = {}) {
+      const timeoutMs = Number(opts.timeoutMs || 8000);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        return await fetch(url, Object.assign({}, opts, { signal: controller.signal }));
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    async function loadScreenerBootstrap({ limit = feedLimit(), mode = state.feedMode, window = state.win } = {}){
+      const direction = els.sort.value === "dump" ? "dump" : (els.onlyPositive.checked ? "pump" : "all");
+      const modeNorm = String(mode || state.feedMode || "spot").toLowerCase();
+      const windowNorm = String(window || state.win || "24h").toLowerCase();
+      const limitNorm = Math.max(10, Number(limit || feedLimit()) || feedLimit());
+      const cacheKey = `${modeNorm}|${windowNorm}|${direction}|${limitNorm}`;
+      const cached = screenerBootstrapCache.get(cacheKey);
+      if (cached && (Date.now() - cached.ts) <= SCREENER_BOOTSTRAP_TTL_MS){
+        return cached.payload;
+      }
+      const qs = new URLSearchParams({
+        limit: String(limitNorm),
+        mode: modeNorm,
+        direction,
+        window: windowNorm,
+      });
+      const r = await fetchWithTimeout(`${API_BASE}/screener/bootstrap?${qs.toString()}`, {
+        cache: "no-store",
+        headers: apiHeaders(),
+        timeoutMs: 9000
+      });
+      if (!r.ok) throw new Error("screener bootstrap not ok");
+      const payload = await r.json();
+      if (!payload || typeof payload !== "object" || !Array.isArray(payload.coins)) {
+        throw new Error("bad screener bootstrap payload");
+      }
+      screenerBootstrapCache.set(cacheKey, { ts: Date.now(), payload });
+      return payload;
+    }
+
+    async function fetchTopCoins(limit=180){
+      const direction = els.sort.value === "dump" ? "dump" : (els.onlyPositive.checked ? "pump" : "all");
+      try{
+        const qs = new URLSearchParams({
+          limit: String(limit),
+          mode: state.feedMode,
+          direction,
+          window: state.win,
+        });
+        const r = await fetchWithTimeout(`${API_BASE}/market/top?${qs.toString()}`, {
+          cache: "no-store",
+          headers: apiHeaders(),
+          timeoutMs: 9000
+        });
+        if (!r.ok) throw new Error("top coins not ok");
+        const data = await r.json();
+        if (!data || !Array.isArray(data.coins)) throw new Error("bad format");
+        return { mode:"api", coins: data.coins };
+      }catch(e){
+        // 2) Fallback: DEMO 500 монет
+        return { mode:"demo", coins: buildDemoCoins(limit) };
+      }
+    }
+
+    async function fetchExchangePrices(symbols){
+      try{
+        const chunkSize = state.feedMode === "mexc_perp" ? 80 : 90;
+        const chunks = [];
+        for (let i = 0; i < symbols.length; i += chunkSize) {
+          chunks.push(symbols.slice(i, i + chunkSize));
+        }
+        const merged = { prices: {}, book: {}, momentums: {}, ts: null };
+        for (const chunk of chunks) {
+          const qs = new URLSearchParams({
+            symbols: chunk.join(","),
+            mode: state.feedMode,
+            window: state.win,
+          });
+          const r = await fetchWithTimeout(`${API_BASE}/market/snapshot?${qs.toString()}`, {
+            cache:"no-store",
+            headers: apiHeaders(),
+            timeoutMs: 9000
+          });
+          if (!r.ok) throw new Error("prices not ok");
+          const data = await r.json();
+          if (!data || typeof data !== "object" || !data.prices) throw new Error("bad format");
+          const px = data.prices || {};
+          for (const ex of Object.keys(px)) {
+            merged.prices[ex] = Object.assign(merged.prices[ex] || {}, px[ex] || {});
+          }
+          const bk = data.book || {};
+          for (const ex of Object.keys(bk)) {
+            merged.book[ex] = Object.assign(merged.book[ex] || {}, bk[ex] || {});
+          }
+          Object.assign(merged.momentums, data.momentums || {});
+          if (data.ts) merged.ts = data.ts;
+        }
+        return {
+          mode:"api",
+          prices: merged.prices,
+          book: merged.book,
+          momentums: merged.momentums,
+          ts: merged.ts
+        };
+      }catch(e){
+        // 2) DEMO цены
+        return {
+          mode:"demo",
+          prices: buildDemoPrices(symbols),
+          book: {},
+          momentums: {},
+          ts: Math.floor(Date.now()/1000)
+        };
+      }
+    }
+
+    function radarCacheKey(){
+      return `${RADAR_CACHE_KEY}:${state.feedMode}:${state.win}`;
+    }
+
+    function readRadarCache(){
+      try{
+        const raw = localStorage.getItem(radarCacheKey());
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return null;
+        if (!Array.isArray(parsed.coins)) return null;
+        if (!parsed.coins.length) return null;
+        const ageMs = Date.now() - Number(parsed.savedAt || 0);
+        return { data: parsed, isFresh: ageMs >= 0 && ageMs <= RADAR_CACHE_TTL_MS, ageMs };
+      }catch(_){
+        return null;
+      }
+    }
+
+    function writeRadarCache(payload){
+      try{
+        localStorage.setItem(radarCacheKey(), JSON.stringify({
+          savedAt: Date.now(),
+          mode: payload.mode || "demo",
+          ts: payload.ts || null,
+          coins: Array.isArray(payload.coins) ? payload.coins : [],
+          prices: payload.prices || {},
+          book: payload.book || {},
+          momentums: payload.momentums || {}
+        }));
+      }catch(_){
+        // ignore storage quota/security errors
+      }
+    }
+
+    function applySnapshot({ mode, coins, prices, book, momentums, ts }){
+      state.coins = Array.isArray(coins) ? coins : [];
+      state.prices = {};
+      for (const ex of EXCHANGES){
+        state.prices[ex] = prices?.[ex] || {};
+      }
+      state.book = book || {};
+      state.momentums = momentums || {};
+      state.lastTs = ts || null;
+      buildRows();
+      setStatus({ mode: mode || "demo", ts: state.lastTs });
+      applyView();
+    }
+
+    // ====== DEMO GENERATORS ======
+    function buildDemoCoins(limit){
+      const top = [
+        ["BTC","Bitcoin"],["ETH","Ethereum"],["SOL","Solana"],["XRP","XRP"],["BNB","BNB"],["DOGE","Dogecoin"],
+        ["ADA","Cardano"],["AVAX","Avalanche"],["TON","Toncoin"],["TRX","TRON"],["DOT","Polkadot"],["MATIC","Polygon"],
+        ["LINK","Chainlink"],["LTC","Litecoin"],["BCH","Bitcoin Cash"],["APT","Aptos"],["ARB","Arbitrum"],
+        ["OP","Optimism"],["SUI","Sui"],["INJ","Injective"],["ATOM","Cosmos"],["NEAR","NEAR"],["UNI","Uniswap"],
+        ["AAVE","Aave"],["FTM","Fantom"],["RUNE","THORChain"],["PEPE","Pepe"],["SHIB","Shiba Inu"],
+        ["ETC","Ethereum Classic"],["FIL","Filecoin"],["ICP","Internet Computer"],["XLM","Stellar"],
+        ["HBAR","Hedera"],["EGLD","MultiversX"],["GALA","Gala"],["IMX","Immutable"],["KAS","Kaspa"],
+        ["WIF","dogwifhat"],["JTO","Jito"],["TIA","Celestia"],["SEI","Sei"],["KAVA","Kava"],
+        ["BOME","BOOK OF MEME"],["JUP","Jupiter"],["RNDR","Render"],["TAO","Bittensor"],["AR","Arweave"],
+        ["PYTH","Pyth Network"],["WLD","Worldcoin"]
+      ];
+      const coins = [];
+      for (let i=0;i<limit;i++){
+        const base = top[i] || [`COIN${i+1}`, `Demo coin ${i+1}`];
+        coins.push({
+          symbol: base[0],
+          name: base[1],
+          rank: i+1,
+          volume24h: Math.floor( (limit-i) * 2_500_000 * (0.6 + Math.random()*0.8) ) // просто для сортировки
+        });
+      }
+      return coins;
+    }
+
+    function buildDemoPrices(symbols){
+      // Демонстрация: для 3 активных бирж даём цену, для остальных null.
+      const prices = {};
+      for (const ex of EXCHANGES) prices[ex] = {};
+      for (const sym of symbols){
+        // Базовая цена (очень грубо)
+        const seed = hash(sym);
+        const base = seed < 0.2 ? 0.00012 :
+                     seed < 0.35 ? 0.012 :
+                     seed < 0.55 ? 0.12 :
+                     seed < 0.75 ? 12 :
+                     seed < 0.90 ? 120 :
+                     90000;
+        const noise = (n) => (1 + (Math.random()-0.5) * n);
+        const p0 = base * noise(0.08);
+
+        prices["BYBIT"][sym]  = p0 * noise(0.004);
+        prices["BITGET"][sym] = p0 * noise(0.004);
+        prices["MEXC"][sym]   = p0 * noise(0.004);
+
+        // Остальные пока пустые
+        prices["OKX"][sym] = null;
+        prices["BINGX"][sym] = null;
+        prices["BITMART"][sym] = null;
+        prices["COINEX"][sym] = null;
+      }
+      return prices;
+    }
+
+    function hash(s){
+      // простая детерминированная "рандомизация"
+      let h = 2166136261;
+      for (let i=0;i<s.length;i++){
+        h ^= s.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return (h >>> 0) / 4294967295;
+    }
+
+    // ====== SPREAD CALC ======
+    function computeBestSpread(symbol){
+      // Prefer backend-provided momentums
+      const backend = state.momentums?.[symbol];
+      if (backend && typeof backend === "object") {
+        const gross = typeof backend.grossPct === "number" ? backend.grossPct : null;
+        const net = typeof backend.netPct === "number" ? backend.netPct : null;
+        return {
+          grossPct: gross,
+          netPct: net,
+          buyEx: backend.buyEx || null,
+          sellEx: backend.sellEx || null,
+          buyAsk: backend.buyAsk ?? null,
+          sellBid: backend.sellBid ?? null,
+          count: backend.exCount ?? null
+        };
+      }
+
+      // Fallback: compute from order book (bid/ask) if available
+      const asks = [];
+      const bids = [];
+      for (const ex of EXCHANGES){
+        const book = state.book?.[ex]?.[symbol];
+        if (book && isFinite(book.ask) && book.ask > 0) asks.push([ex, book.ask]);
+        if (book && isFinite(book.bid) && book.bid > 0) bids.push([ex, book.bid]);
+      }
+      if (asks.length < 1 || bids.length < 1) {
+        return { grossPct: null, netPct: null, buyEx: null, sellEx: null, buyAsk: null, sellBid: null, count: 0 };
+      }
+      asks.sort((a,b)=>a[1]-b[1]);
+      bids.sort((a,b)=>b[1]-a[1]);
+      const [buyEx, minAsk] = asks[0];
+      const [sellEx, maxBid] = bids[0];
+      const validCount = new Set([...asks.map(v=>v[0]), ...bids.map(v=>v[0])]).size;
+      if (validCount < 2) {
+        return { grossPct: null, netPct: null, buyEx: null, sellEx: null, buyAsk: null, sellBid: null, count: validCount };
+      }
+      const grossPct = ((maxBid - minAsk) / minAsk) * 100;
+      return { grossPct, netPct: null, buyEx, sellEx, buyAsk: minAsk, sellBid: maxBid, count: validCount };
+    }
+
+    // ====== PREPARE ROWS ======
+    function buildRows(){
+      state.rows = state.coins.map((c) => {
+        const s = computeBestSpread(c.symbol);
+        return { coin: c, momentum: s };
+      });
+    }
+
+    // ====== FILTER / SORT ======
+    function getFilters(){
+      const q = String(els.search.value || "").trim().toUpperCase();
+      const sort = els.sort.value;
+      const minVol = parseFloat(String(els.minVol.value || "").replaceAll(" ", "")) || 0;
+      const alertPct = parseFloat(String(els.alertPct.value || "").replaceAll(" ", "")) || 0;
+      const only2plus = !!els.only2plus.checked;
+      const onlyPositive = !!els.onlyPositive.checked;
+      return { q, sort, minVol, only2plus, onlyPositive, alertPct, enableAlerts: !!els.enableAlerts.checked };
+    }
+
+    function applyView(){
+      const f = getFilters();
+
+      let view = state.rows.slice();
+
+      if (f.q){
+        view = view.filter((r) => {
+          const sym = String(r.coin.symbol || "").toUpperCase();
+          const name = String(r.coin.name || "").toUpperCase();
+          return sym.includes(f.q) || name.includes(f.q);
+        });
+      }
+
+      if (f.minVol > 0){
+        view = view.filter((r) => (r.coin.volume24h || 0) >= f.minVol);
+      }
+
+      if (f.only2plus){
+        if (state.feedMode !== "mexc_perp") {
+          view = view.filter((r) => (r.momentum.count || 0) >= 2);
+        }
+      }
+
+      if (f.onlyPositive){
+        view = view.filter((r) => (typeof r.momentum.grossPct === "number") && r.momentum.grossPct > 0);
+      }
+
+      // UX-safe: if strict filters hide everything, auto-relax one step.
+      if (!view.length && state.rows.length && f.onlyPositive){
+        els.onlyPositive.checked = false;
+        return applyView();
+      }
+      if (!view.length && state.rows.length && f.only2plus){
+        els.only2plus.checked = false;
+        return applyView();
+      }
+
+      if (f.sort === "pop"){
+        view.sort((a,b) => (a.coin.rank || 1e9) - (b.coin.rank || 1e9));
+      } else if (f.sort === "pumpscore"){
+        view.sort((a,b) => (b.coin.pumpScore || -1e9) - (a.coin.pumpScore || -1e9));
+      } else if (f.sort === "vol"){
+        view.sort((a,b) => (b.coin.volume24h || 0) - (a.coin.volume24h || 0));
+      } else if (f.sort === "momentum"){
+        view.sort((a,b) => (b.momentum.grossPct || -1e9) - (a.momentum.grossPct || -1e9));
+      } else if (f.sort === "dump"){
+        view.sort((a,b) => (a.momentum.grossPct || 1e9) - (b.momentum.grossPct || 1e9));
+      } else if (f.sort === "bestbuy"){
+        view.sort((a,b) => {
+          const aa = a.momentum?.buyAsk;
+          const bb = b.momentum?.buyAsk;
+          if (aa == null) return 1;
+          if (bb == null) return -1;
+          return aa - bb; // lower ask = better buy
+        });
+      } else if (f.sort === "bestsell"){
+        view.sort((a,b) => {
+          const aa = a.momentum?.sellBid;
+          const bb = b.momentum?.sellBid;
+          if (aa == null) return 1;
+          if (bb == null) return -1;
+          return bb - aa; // higher bid = better sell
+        });
+      }
+
+      render(view);
+      checkAlerts(view);
+    }
+
+    // ====== RENDER ======
+    function render(viewRows){
+      const frag = document.createDocumentFragment();
+      let risingCount = 0;
+
+      for (const r of viewRows){
+        const row = document.createElement("div");
+        row.className = "grid-row";
+
+        // COIN cell
+        const c0 = document.createElement("div");
+        c0.className = "cell";
+        const coin = document.createElement("div");
+        coin.className = "coin";
+
+        const img = document.createElement("img");
+        img.src = coinIconUrl(r.coin.symbol);
+        img.alt = r.coin.symbol;
+        img.loading = "lazy";
+        img.referrerPolicy = "no-referrer";
+        img.addEventListener("error", () => {
+          img.style.opacity = "0.9";
+          img.src = fallbackIcon(r.coin.symbol);
+        });
+
+        const sym = document.createElement("span");
+        sym.className = "sym";
+        sym.textContent = String(r.coin.symbol || "—");
+
+        const nm = document.createElement("span");
+        nm.className = "name";
+        nm.textContent = r.coin.name ? `• ${r.coin.name}` : "";
+
+        coin.appendChild(img);
+        coin.appendChild(sym);
+        coin.appendChild(nm);
+        c0.appendChild(coin);
+        row.appendChild(c0);
+
+        // Exchange price cells
+        for (const ex of EXCHANGES){
+          const c = document.createElement("div");
+          c.className = "cell center split";
+
+          const p = state.prices?.[ex]?.[r.coin.symbol];
+          const isActive = activeExchanges().has(ex);
+          if (r.momentum?.buyEx === ex) c.classList.add("buy");
+          if (r.momentum?.sellEx === ex) c.classList.add("sell");
+
+          if (!isActive){
+            c.classList.add("muted");
+          }
+
+          if (typeof p === "number" && isFinite(p)){
+            c.textContent = fmtPrice(p);
+          } else {
+            c.textContent = "—";
+            c.classList.add("muted");
+          }
+          row.appendChild(c);
+        }
+
+        // Spread cell
+        const cLast = document.createElement("div");
+        cLast.className = "cell split";
+
+        const wrap = document.createElement("div");
+        wrap.className = "momentum";
+
+        const left = document.createElement("div");
+        left.className = "pair";
+
+        const right = document.createElement("div");
+        right.className = "pct";
+
+        if (typeof r.momentum.grossPct === "number" && isFinite(r.momentum.grossPct)){
+          left.textContent = `${state.win.toUpperCase()} move`;
+          const sign = r.momentum.grossPct >= 0 ? "+" : "";
+          const grossText = `${sign}${r.momentum.grossPct.toFixed(3)}%`;
+          const netText = (typeof r.momentum.netPct === "number" && isFinite(r.momentum.netPct))
+            ? ` (net ${r.momentum.netPct >= 0 ? '+' : ''}${r.momentum.netPct.toFixed(3)}%)`
+            : "";
+          right.textContent = `${grossText}${netText}`;
+          right.classList.add(r.momentum.grossPct >= 0 ? "good" : "bad");
+        } else {
+          left.textContent = "—";
+          right.textContent = "";
+          left.classList.add("muted");
+        }
+
+        wrap.appendChild(left);
+        wrap.appendChild(right);
+        cLast.appendChild(wrap);
+        row.appendChild(cLast);
+
+        
+        // Cinematic: heat + badge on delta cell
+        try{
+          const pct = r.momentum?.grossPct;
+          if (typeof pct === "number"){
+            const lvl = heatLevel(pct);
+            if (lvl){
+              right.classList.add(`heat-${lvl}`);
+            }
+            // Rising badge threshold (3m): >= alertPct or >= 3%
+            const f = getFilters();
+            const thr = (f && f.alertPct) ? Number(f.alertPct) : 3;
+            if (pct >= thr){
+              const b = document.createElement("span");
+              b.className = "badge gold";
+              b.innerHTML = '<span class="dot"></span>RISING';
+              // put badge into the last cell wrapper, next to right value
+              wrap.appendChild(b);
+              risingCount += 1;
+            }
+            if (state.feedMode === "mexc_perp" && typeof r.coin?.pumpScore === "number" && r.coin.pumpScore > 0){
+              const b2 = document.createElement("span");
+              b2.className = "badge";
+              b2.textContent = `PUMP ${r.coin.pumpScore.toFixed(1)}`;
+              wrap.appendChild(b2);
+            }
+          }
+        }catch(_){}
+
+        frag.appendChild(row);
+
+      }
+
+      els.rows.innerHTML = "";
+      els.rows.appendChild(frag);
+
+      const hotEl = document.getElementById('hotCount');
+      if (hotEl) hotEl.textContent = `HOT • ${risingCount}`;
+
+    }
+
+    function checkAlerts(viewRows){
+      const f = getFilters();
+      if (!f.enableAlerts || !f.alertPct) return;
+      const now = Date.now();
+      for (const r of viewRows){
+        const pct = r.momentum?.grossPct;
+        if (typeof pct !== "number") continue;
+        if (f.sort === "dump") {
+          if (Math.abs(pct) < f.alertPct || pct >= 0) continue;
+        } else if (pct < f.alertPct) continue;
+        const key = `${r.coin.symbol}:${r.momentum.buyEx}:${r.momentum.sellEx}`;
+        const last = state.lastAlertTs[key] || 0;
+        if (now - last < 15000) continue;
+        state.lastAlertTs[key] = now;
+        const label = pct >= 0 ? "PUMP" : "DUMP";
+        toast(`${label} ${r.coin.symbol}: ${pct.toFixed(3)}% (${state.win.toUpperCase()})`);
+        break;
+      }
+    }
+
+    // ====== MAIN LOAD ======
+    let loadAllPromise = null;
+    let refreshPromise = null;
+
+    async function loadAll({ forceDemo=false } = {}){
+      if (loadAllPromise) return loadAllPromise;
+      loadAllPromise = (async () => {
+      const loadToken = ++latestLoadToken;
+      state.feedMode = document.getElementById("feedMode")?.value || "spot";
+      updateFeedModeUi();
+      els.statusText.textContent = `LOADING • ${state.feedMode === "mexc_perp" ? "MEXC PERP" : "SPOT"}...`;
+      let usedCache = false;
+
+      if (!forceDemo){
+        const cache = readRadarCache();
+        if (cache && cache.data){
+          applySnapshot({
+            mode: cache.isFresh ? "api" : (cache.data.mode || "demo"),
+            coins: cache.data.coins,
+            prices: cache.data.prices,
+            book: cache.data.book,
+            momentums: cache.data.momentums,
+            ts: cache.data.ts
+          });
+          usedCache = true;
+        } else {
+          applySnapshot({
+            mode: "demo",
+            coins: buildDemoCoins(120),
+            prices: buildDemoPrices(buildDemoCoins(120).map(c => c.symbol)),
+            book: {},
+            momentums: {},
+            ts: Math.floor(Date.now()/1000)
+          });
+        }
+      }
+
+      els.applyBtn.disabled = !usedCache;
+      els.refreshBtn.disabled = !usedCache;
+      try{
+        const top = forceDemo ? { mode:"demo", coins: buildDemoCoins(feedLimit()) } : await fetchTopCoins(feedLimit());
+        if (loadToken !== latestLoadToken) return;
+        const symbols = top.coins.map(c => c.symbol).filter(Boolean);
+        const snap = forceDemo ? { mode:"demo", prices: buildDemoPrices(symbols), book: {}, momentums: {}, ts: Math.floor(Date.now()/1000) }
+                               : await fetchExchangePrices(symbols);
+        if (loadToken !== latestLoadToken) return;
+
+        const mode = forceDemo ? "demo" : (snap.mode || top.mode || "demo");
+        applySnapshot({
+          mode,
+          coins: top.coins,
+          prices: snap.prices,
+          book: snap.book,
+          momentums: snap.momentums,
+          ts: snap.ts
+        });
+        if (!forceDemo){
+          writeRadarCache({
+            mode,
+            ts: snap.ts,
+            coins: top.coins,
+            prices: snap.prices,
+            book: snap.book,
+            momentums: snap.momentums
+          });
+        }
+      } catch (e) {
+        if (!usedCache && state.coins.length) {
+          els.statusText.textContent = `DEGRADED • ${state.feedMode === "mexc_perp" ? "MEXC PERP" : "SPOT"} • cached`;
+          return;
+        }
+        throw e;
+      } finally {
+        els.applyBtn.disabled = false;
+        els.refreshBtn.disabled = false;
+      }
+      })();
+      try {
+        return await loadAllPromise;
+      } finally {
+        loadAllPromise = null;
+      }
+    }
+
+    async function refreshSnapshot(){
+      if (refreshPromise) return refreshPromise;
+      if (document.hidden || !state.coins.length) return;
+      refreshPromise = (async () => {
+        const refreshToken = ++latestRefreshToken;
+        state.feedMode = document.getElementById("feedMode")?.value || state.feedMode || "spot";
+        updateFeedModeUi();
+        els.statusText.textContent = `REFRESH • ${state.feedMode === "mexc_perp" ? "MEXC PERP" : "SPOT"}...`;
+        try{
+          const symbols = state.coins.map(c => c.symbol).filter(Boolean);
+          const snap = await fetchExchangePrices(symbols);
+          if (refreshToken !== latestRefreshToken) return;
+          const mode = snap.mode || state.mode;
+          applySnapshot({
+            mode,
+            coins: state.coins,
+            prices: snap.prices,
+            book: snap.book,
+            momentums: snap.momentums,
+            ts: snap.ts
+          });
+          if (mode === "api"){
+            writeRadarCache({
+              mode,
+              ts: snap.ts,
+              coins: state.coins,
+              prices: snap.prices,
+              book: snap.book,
+              momentums: snap.momentums
+            });
+          }
+        } catch (_e) {
+          els.statusText.textContent = `DEGRADED • ${state.feedMode === "mexc_perp" ? "MEXC PERP" : "SPOT"} • live retry`;
+        }
+      })();
+      try {
+        return await refreshPromise;
+      } finally {
+        refreshPromise = null;
+      }
+    }
+
+    // ====== EVENTS ======
+    let searchTimer = null;
+    els.search.addEventListener("input", () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(applyView, 120);
+    });
+
+    document.getElementById("feedMode").addEventListener("change", () => {
+      state.feedMode = document.getElementById("feedMode")?.value || "spot";
+      if (state.feedMode === "mexc_perp"){
+        document.getElementById("sort").value = "momentum";
+        document.getElementById("only2plus").checked = false;
+      } else {
+        document.getElementById("only2plus").checked = true;
+        setWindow("24h");
+      }
+      updateFeedModeUi();
+      loadAll();
+    });
+    els.applyBtn.addEventListener("click", () => {
+      if (state.feedMode !== (document.getElementById("feedMode")?.value || state.feedMode)){
+        return loadAll();
+      }
+      applyView();
+    });
+    els.demoBtn.addEventListener("click", () => loadAll({ forceDemo:true }));
+    els.refreshBtn.addEventListener("click", () => refreshSnapshot());
+    document.getElementById("explainBtn").addEventListener("click", () => toast("Explain-панель"));
+
+    try{
+      if (typeof window.ym === "function") {
+        window.ym(108276909, "reachGoal", "open_market_radar", { page: "screener" });
+      }
+    }catch(_e){}
+
+    // старт
+    (async () => {
+      // Instant first paint from built-in demo data (before network/config).
+      state.coins = buildDemoCoins(120);
+      const initialSymbols = state.coins.map(c => c.symbol).filter(Boolean);
+      state.prices = buildDemoPrices(initialSymbols);
+      state.book = {};
+      state.momentums = {};
+      state.lastTs = Math.floor(Date.now()/1000);
+      buildRows();
+      setStatus({ mode: "demo", ts: state.lastTs });
+      updateFeedModeUi();
+      applyView();
+
+      await loadRuntimeConfig();
+      try{
+        const payload = await loadScreenerBootstrap({
+          limit: feedLimit(),
+          mode: state.feedMode,
+          window: state.win
+        });
+        applySnapshot({
+          mode: payload.mode || "api",
+          coins: payload.coins,
+          prices: payload.prices,
+          book: payload.book,
+          momentums: payload.momentums,
+          ts: payload.ts
+        });
+        writeRadarCache({
+          mode: payload.mode || "api",
+          ts: payload.ts,
+          coins: payload.coins,
+          prices: payload.prices,
+          book: payload.book,
+          momentums: payload.momentums
+        });
+      }catch(_e){
+        loadAll();
+      }
+      setInterval(() => {
+        if (document.hidden) return;
+        refreshSnapshot();
+      }, REFRESH_MS);
+    })();
+  </script>
+  <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+      var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+      s1.async=true;
+      s1.src='https://embed.tawk.to/69c6c43078f08b1c35658ae8/1jko6so4r';
+      s1.charset='UTF-8';
+      s1.setAttribute('crossorigin','*');
+      s0.parentNode.insertBefore(s1,s0);
+    })();
+  </script>
+</body>
+</html>

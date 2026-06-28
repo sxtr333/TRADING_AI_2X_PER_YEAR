@@ -1,0 +1,734 @@
+//@version=6
+indicator("NAGASAKI_V9", overlay = true, max_boxes_count = 180, max_lines_count = 180, max_labels_count = 180)
+
+//====================================================
+// INPUTS
+//====================================================
+mode                = input.string("Strict", "Mode", options = ["Strict", "Detail"])
+useM15              = mode == "Detail"
+
+tfM15               = input.timeframe("15",  "Detail TF")
+tfH1                = input.timeframe("60",  "Core TF")
+tfH4                = input.timeframe("240", "Heavy TF")
+
+fastEmaLen          = input.int(20, "Trend fast EMA", minval = 1)
+slowEmaLen          = input.int(50, "Trend slow EMA", minval = 2)
+
+pivotL              = input.int(3, "Pivot left", minval = 1)
+pivotR              = input.int(3, "Pivot right", minval = 2)
+preBars             = input.int(18, "Bars before pivot", minval = 5)
+
+atrLen              = input.int(14, "ATR length", minval = 1)
+volLen              = input.int(20, "Volume average length", minval = 2)
+regLen              = input.int(50, "Regression length", minval = 10)
+
+// candidate filters
+minStretchAtr       = input.float(1.15, "Min pump stretch ATR", step = 0.05)
+minReactionAtr      = input.float(0.75, "Min reaction ATR", step = 0.05)
+minVolRatio         = input.float(1.10, "Min volume ratio", step = 0.05)
+minWickFrac         = input.float(0.28, "Min upper wick fraction", step = 0.02)
+minRejectDepthAtr   = input.float(0.25, "Min reject depth ATR", step = 0.05)
+
+// score normalization
+stretchNorm         = input.float(2.00, "Stretch normalizer", step = 0.05)
+reactionNorm        = input.float(1.40, "Reaction normalizer", step = 0.05)
+volNorm             = input.float(1.70, "Volume normalizer", step = 0.05)
+wickNorm            = input.float(0.42, "Wick normalizer", step = 0.02)
+regNorm             = input.float(1.80, "Regression Z normalizer", step = 0.05)
+reactionDepthNorm   = input.float(0.95, "Retest depth normalizer", step = 0.05)
+h4SlopeNorm         = input.float(0.0040, "H4 slope normalizer", step = 0.0005)
+
+// zone geometry
+wickFocus           = input.float(0.68, "Center inside wick (0..1)", minval = 0.0, maxval = 1.0, step = 0.05)
+zoneWidthAtr        = input.float(0.10, "Zone half-width ATR", step = 0.01)
+zoneWidthPct        = input.float(0.07, "Zone half-width %", step = 0.01)
+
+m15WidthMult        = input.float(0.90, "15m width multiplier", step = 0.05)
+h1WidthMult         = input.float(1.00, "1H width multiplier", step = 0.05)
+h4WidthMult         = input.float(1.18, "4H width multiplier", step = 0.05)
+mergeMult           = input.float(1.08, "Merge tolerance x", step = 0.01)
+
+invalidBreakAtr     = input.float(0.35, "Break above zone by ATR => spent", step = 0.05)
+flipBackFrac        = input.float(0.50, "Flip back below center fraction", minval = 0.1, maxval = 1.0, step = 0.05)
+
+// ranking / memory
+decayHours          = input.int(280, "Freshness decay hours", minval = 12)
+maxStoredZones      = input.int(90, "Max stored zones", minval = 20, maxval = 160)
+displayCount        = input.int(14, "Levels to display", minval = 3, maxval = 40)
+maxAboveAtr         = input.float(18.0, "Max distance above price in ATR", step = 0.5)
+maxBelowAtr         = input.float(35.0, "Max historical distance below price in ATR", step = 0.5)
+showHistoricalBelow = input.bool(true, "Show historical levels below price")
+showSpentLevels     = input.bool(true, "Keep spent levels")
+
+// visuals
+futureHours         = input.int(96, "Right extension hours", minval = 12)
+showBg              = input.bool(true, "Show bearish H4 background")
+showLabels          = input.bool(true, "Show probability labels")
+showCenterLine      = input.bool(true, "Show center line")
+showRegTable        = input.bool(true, "Show regression dashboard")
+
+// probability tiers
+yellowProb          = input.float(0.56, "YELLOW from probability", minval = 0.40, maxval = 0.99, step = 0.01)
+orangeProb          = input.float(0.66, "ORANGE from probability", minval = 0.40, maxval = 0.99, step = 0.01)
+redProb             = input.float(0.76, "RED from probability",    minval = 0.40, maxval = 0.99, step = 0.01)
+maroonProb          = input.float(0.84, "MAROON from probability", minval = 0.40, maxval = 0.99, step = 0.01)
+reversalProb        = input.float(0.58, "REVERSAL from rev-prob",  minval = 0.40, maxval = 0.99, step = 0.01)
+
+//====================================================
+// CORE SERIES
+//====================================================
+atr = ta.atr(atrLen)
+
+//====================================================
+// HELPERS
+//====================================================
+f_clamp(v, lo, hi) =>
+    math.max(lo, math.min(hi, v))
+
+f_bear_trend() =>
+    fast = ta.ema(close, fastEmaLen)
+    slow = ta.ema(close, slowEmaLen)
+    fast < slow and close < slow
+
+f_reg_z() =>
+    lc = math.log(math.max(close, syminfo.mintick))
+    lr = ta.linreg(lc, regLen, 0)
+    rs = lc - lr
+    sd = ta.stdev(rs, regLen)
+    sd > 0 ? rs / sd : 0.0
+
+f_reg_slope() =>
+    lc = math.log(math.max(close, syminfo.mintick))
+    lr = ta.linreg(lc, regLen, 0)
+    lr - lr[1]
+
+f_src_text(s15, s1h, s4h) =>
+    txt = ""
+    txt := s15 ? "15m" : txt
+    txt := s1h ? (str.length(txt) > 0 ? txt + "+1H" : "1H") : txt
+    txt := s4h ? (str.length(txt) > 0 ? txt + "+4H" : "4H") : txt
+    txt
+
+f_src_bonus(s15, s1h, s4h) =>
+    base = (s15 ? 0.04 : 0.0) + (s1h ? 0.34 : 0.0) + (s4h ? 0.78 : 0.0)
+    synergy = (s1h and s4h ? 0.58 : 0.0) + (s15 and s1h ? 0.10 : 0.0) + (s15 and s4h ? 0.12 : 0.0) + (s15 and s1h and s4h ? 0.18 : 0.0)
+    base + synergy
+
+f_hit_bonus(clusterHits) =>
+    math.min(math.max(clusterHits - 1, 0), 6) * 0.12
+
+f_retest_bonus(touches, rejects, depthQ) =>
+    math.min(touches, 4) * 0.05 + math.min(rejects, 5) * 0.24 + math.min(depthQ, 6.0) * 0.14
+
+f_chew_penalty(touches, rejects, falseBreaks, insideBars) =>
+    chew = math.max(touches - rejects - 1, 0) * 0.11 + falseBreaks * 0.18 + insideBars * 0.012
+    math.min(chew, 2.15)
+
+f_live_halfw(baseHalf, touches, rejects, falseBreaks, depthQ) =>
+    shrink = f_clamp(rejects * 0.035 + touches * 0.010 + depthQ * 0.018 - falseBreaks * 0.008, 0.0, 0.38)
+    baseHalf * (1.0 - shrink)
+
+f_eff_score(rawScore, ageHours, clusterHits, touches, rejects, falseBreaks, insideBars, depthQ, s15, s1h, s4h, spent, flipped) =>
+    freshness = 0.55 + 0.45 * math.exp(-(ageHours / (decayHours * 1.0)))
+    base = rawScore + f_hit_bonus(clusterHits) + f_retest_bonus(touches, rejects, depthQ) - f_chew_penalty(touches, rejects, falseBreaks, insideBars) + f_src_bonus(s15, s1h, s4h) + (flipped ? 0.22 : 0.0)
+    spent ? base * freshness - (flipped ? 0.25 : 0.60) : base * freshness
+
+f_prob(score) =>
+    1.0 / (1.0 + math.exp(-(score - 4.15)))
+
+f_prob_tier(prob, s15, s1h, s4h) =>
+    tier = prob >= maroonProb ? 3 : prob >= redProb ? 2 : prob >= orangeProb ? 1 : 0
+    if tier >= 3 and not (s1h and s4h)
+        tier := 2
+    if tier >= 2 and not (s1h or s4h)
+        tier := 1
+    tier
+
+f_zone_color(tier) =>
+    tier == 3 ? color.rgb(96, 0, 48) : tier == 2 ? color.red : tier == 1 ? color.orange : color.yellow
+
+f_zone_name(tier) =>
+    tier == 3 ? "MAROON" : tier == 2 ? "RED" : tier == 1 ? "ORANGE" : "YELLOW"
+
+f_rev_prob(effScore, depthQ, falseBreaks, insideBars, s15, s1h, s4h, bearCtx, h4z, slope) =>
+    srcEdge = (s15 ? 0.04 : 0.0) + (s1h ? 0.24 : 0.0) + (s4h ? 0.48 : 0.0) + (s1h and s4h ? 0.28 : 0.0)
+    ctxEdge = (bearCtx ? 0.36 : 0.0) + f_clamp(h4z / 2.4, 0.0, 0.42) + f_clamp((-slope) / h4SlopeNorm, 0.0, 0.38)
+    cleanEdge = depthQ * 0.18 - falseBreaks * 0.11 - insideBars * 0.008
+    x = 0.62 * effScore + srcEdge + ctxEdge + cleanEdge - 2.80
+    1.0 / (1.0 + math.exp(-x))
+
+f_heat_score(localZ, h1Z, h4Z, h4Slope, bearCtx) =>
+    mix = 0.30 * f_clamp(localZ / 2.40, 0.0, 1.0) + 0.30 * f_clamp(h1Z / 2.10, 0.0, 1.0) + 0.22 * f_clamp(h4Z / 1.80, 0.0, 1.0) + 0.12 * f_clamp((-h4Slope) / h4SlopeNorm, 0.0, 1.0) + (bearCtx ? 0.06 : 0.0)
+    100.0 * f_clamp(mix, 0.0, 1.0)
+
+f_heat_name(heat) =>
+    heat >= 85 ? "EXTREME" : heat >= 68 ? "HOT" : heat >= 48 ? "WARM" : "NORMAL"
+
+f_heat_color(heat) =>
+    heat >= 85 ? color.rgb(96, 0, 48) : heat >= 68 ? color.red : heat >= 48 ? color.orange : color.new(color.teal, 0)
+
+//====================================================
+// EVENT PACKS
+//====================================================
+f_evt_pack(widthMult, srcBoost) =>
+    ph = ta.pivothigh(high, pivotL, pivotR)
+
+    pHigh    = high[pivotR]
+    pLow     = low[pivotR]
+    pOpen    = open[pivotR]
+    pClose   = close[pivotR]
+    bodyTop  = math.max(pOpen, pClose)
+    pRange   = math.max(pHigh - pLow, syminfo.mintick)
+    wickFrac = (pHigh - bodyTop) / pRange
+
+    pAtr     = ta.atr(atrLen)[pivotR]
+    pVolAvg  = ta.sma(volume, volLen)[pivotR]
+    pSlow    = ta.ema(close, slowEmaLen)[pivotR]
+
+    baseBefore  = ta.lowest(low, preBars)[pivotR]
+    reactionLow = ta.lowest(low, pivotR + 1)
+
+    stretchAtr  = (pHigh - baseBefore) / math.max(pAtr, syminfo.mintick)
+    reactionAtr = (pHigh - reactionLow) / math.max(pAtr, syminfo.mintick)
+    volRatio    = volume[pivotR] / math.max(pVolAvg, 1.0)
+    regZ        = f_reg_z()[pivotR]
+
+    trendDown = f_bear_trend()
+    ctxOk     = trendDown or regZ > 0.90 or pHigh > pSlow + pAtr * 1.15
+
+    cond = not na(ph) and not na(baseBefore) and stretchAtr >= minStretchAtr and reactionAtr >= minReactionAtr and volRatio >= minVolRatio and wickFrac >= minWickFrac and ctxOk
+
+    center = bodyTop + (pHigh - bodyTop) * wickFocus
+    halfw  = math.max(pAtr * zoneWidthAtr * widthMult, center * zoneWidthPct * 0.01)
+
+    sStretch = f_clamp(stretchAtr / stretchNorm, 0.0, 2.6)
+    sReact   = f_clamp(reactionAtr / reactionNorm, 0.0, 2.8)
+    sVol     = f_clamp(volRatio / volNorm, 0.0, 2.2)
+    sWick    = f_clamp(wickFrac / wickNorm, 0.0, 2.2)
+    sReg     = f_clamp(regZ / regNorm, 0.0, 2.0)
+    ctxB     = trendDown ? 0.28 : (regZ > 1.20 ? 0.12 : 0.0)
+
+    rawScore = 1.05 * sStretch + 1.20 * sReact + 0.82 * sVol + 0.72 * sWick + 0.88 * sReg + ctxB + srcBoost
+
+    evtTime  = ta.valuewhen(cond, time[pivotR], 0)
+    evtPrice = ta.valuewhen(cond, center, 0)
+    evtHalfW = ta.valuewhen(cond, halfw, 0)
+    evtScore = ta.valuewhen(cond, rawScore, 0)
+
+    [evtTime, evtPrice, evtHalfW, evtScore]
+
+f_evt_pack_confirmed(widthMult, srcBoost) =>
+    [evtTime0, evtPrice0, evtHalfW0, evtScore0] = f_evt_pack(widthMult, srcBoost)
+    [evtTime0[1], evtPrice0[1], evtHalfW0[1], evtScore0[1]]
+
+f_req_evt(tf, widthMult, srcBoost) =>
+    if timeframe.in_seconds(tf) > timeframe.in_seconds()
+        request.security(syminfo.tickerid, tf, f_evt_pack_confirmed(widthMult, srcBoost), gaps = barmerge.gaps_off, lookahead = barmerge.lookahead_on)
+    else
+        request.security(syminfo.tickerid, tf, f_evt_pack(widthMult, srcBoost), gaps = barmerge.gaps_off, lookahead = barmerge.lookahead_off)
+
+f_req_reg(tf) =>
+    if timeframe.in_seconds(tf) > timeframe.in_seconds()
+        request.security(syminfo.tickerid, tf, f_reg_z()[1], gaps = barmerge.gaps_off, lookahead = barmerge.lookahead_on)
+    else
+        request.security(syminfo.tickerid, tf, f_reg_z(), gaps = barmerge.gaps_off, lookahead = barmerge.lookahead_off)
+
+f_req_h4_ctx(tf) =>
+    if timeframe.in_seconds(tf) > timeframe.in_seconds()
+        request.security(syminfo.tickerid, tf, [ta.ema(close, fastEmaLen)[1], ta.ema(close, slowEmaLen)[1], close[1], f_reg_z()[1], f_reg_slope()[1]], gaps = barmerge.gaps_off, lookahead = barmerge.lookahead_on)
+    else
+        request.security(syminfo.tickerid, tf, [ta.ema(close, fastEmaLen), ta.ema(close, slowEmaLen), close, f_reg_z(), f_reg_slope()], gaps = barmerge.gaps_off, lookahead = barmerge.lookahead_off)
+
+//====================================================
+// ANCHOR REQUESTS
+//====================================================
+[m15Time, m15Price, m15HalfW, m15Score] = f_req_evt(tfM15, m15WidthMult, 0.05)
+[h1Time,  h1Price,  h1HalfW,  h1Score]  = f_req_evt(tfH1,  h1WidthMult,  0.28)
+[h4Time,  h4Price,  h4HalfW,  h4Score]  = f_req_evt(tfH4,  h4WidthMult,  0.62)
+
+newM15 = useM15 and not na(m15Time) and (na(m15Time[1]) or m15Time != m15Time[1])
+newH1  = not na(h1Time) and (na(h1Time[1]) or h1Time != h1Time[1])
+newH4  = not na(h4Time) and (na(h4Time[1]) or h4Time != h4Time[1])
+
+//====================================================
+// H4 REGRESSION CONTEXT
+//====================================================
+[h4Fast, h4Slow, h4Close, h4RegZNow, h4RegSlopeNow] = f_req_h4_ctx(tfH4)
+h1RegZNow = f_req_reg(tfH1)
+
+bearH4    = h4Fast < h4Slow and h4Close < h4Slow
+bgcolor(showBg and bearH4 ? color.new(color.red, 95) : na)
+
+//====================================================
+// ZONE STORAGE
+//====================================================
+var float[] zoneCenter   = array.new_float()
+var float[] zoneHalfW    = array.new_float()
+var float[] zoneRawScore = array.new_float()
+var int[]   zoneBornTime = array.new_int()
+var int[]   zoneLastTime = array.new_int()
+var int[]   zoneHits     = array.new_int()
+
+var bool[]  zoneSpent    = array.new_bool()
+var bool[]  zoneFlipped  = array.new_bool()
+var bool[]  zoneActive   = array.new_bool()
+
+var bool[]  zoneSrc15    = array.new_bool()
+var bool[]  zoneSrc1H    = array.new_bool()
+var bool[]  zoneSrc4H    = array.new_bool()
+
+var int[]   zoneTouches  = array.new_int()
+var int[]   zoneRejects  = array.new_int()
+var int[]   zoneFalseBr  = array.new_int()
+var int[]   zoneInside   = array.new_int()
+var float[] zoneDepthQ   = array.new_float()
+
+//====================================================
+// INSERT / MERGE
+//====================================================
+f_insert_or_merge(evtTime, evtPrice, evtHalfW, evtScore, src15, src1h, src4h) =>
+    if not na(evtTime) and not na(evtPrice) and not na(evtHalfW) and not na(evtScore)
+        mergeIdx = -1
+        bestDist = 10e10
+        sz = array.size(zoneCenter)
+
+        if sz > 0
+            for i = 0 to sz - 1
+                zc = array.get(zoneCenter, i)
+                zh = array.get(zoneHalfW, i)
+                dist = math.abs(zc - evtPrice)
+                tol  = math.max(zh, evtHalfW) * mergeMult
+                if dist <= tol and dist < bestDist
+                    bestDist := dist
+                    mergeIdx := i
+
+        if mergeIdx >= 0
+            oldC    = array.get(zoneCenter, mergeIdx)
+            oldH    = array.get(zoneHalfW, mergeIdx)
+            oldS    = array.get(zoneRawScore, mergeIdx)
+            oldB    = array.get(zoneBornTime, mergeIdx)
+            oldL    = array.get(zoneLastTime, mergeIdx)
+            oldHits = array.get(zoneHits, mergeIdx)
+
+            newS = math.min(oldS + evtScore * 0.94, 18.0)
+            newC = (oldC * oldS + evtPrice * evtScore) / math.max(oldS + evtScore, 0.0001)
+            newH = math.max(oldH, evtHalfW)
+
+            array.set(zoneCenter,   mergeIdx, newC)
+            array.set(zoneHalfW,    mergeIdx, newH)
+            array.set(zoneRawScore, mergeIdx, newS)
+            array.set(zoneBornTime, mergeIdx, math.min(oldB, evtTime))
+            array.set(zoneLastTime, mergeIdx, math.max(oldL, evtTime))
+            array.set(zoneHits,     mergeIdx, oldHits + 1)
+
+            array.set(zoneSpent,   mergeIdx, false)
+            array.set(zoneFlipped, mergeIdx, false)
+
+            array.set(zoneSrc15, mergeIdx, array.get(zoneSrc15, mergeIdx) or src15)
+            array.set(zoneSrc1H, mergeIdx, array.get(zoneSrc1H, mergeIdx) or src1h)
+            array.set(zoneSrc4H, mergeIdx, array.get(zoneSrc4H, mergeIdx) or src4h)
+        else
+            array.push(zoneCenter,   evtPrice)
+            array.push(zoneHalfW,    evtHalfW)
+            array.push(zoneRawScore, math.min(evtScore, 18.0))
+            array.push(zoneBornTime, evtTime)
+            array.push(zoneLastTime, evtTime)
+            array.push(zoneHits,     1)
+
+            array.push(zoneSpent,    false)
+            array.push(zoneFlipped,  false)
+            array.push(zoneActive,   false)
+
+            array.push(zoneSrc15, src15)
+            array.push(zoneSrc1H, src1h)
+            array.push(zoneSrc4H, src4h)
+
+            array.push(zoneTouches,  0)
+            array.push(zoneRejects,  0)
+            array.push(zoneFalseBr,  0)
+            array.push(zoneInside,   0)
+            array.push(zoneDepthQ,   0.0)
+
+if newM15
+    f_insert_or_merge(m15Time, m15Price, m15HalfW, m15Score, true, false, false)
+
+if newH1
+    f_insert_or_merge(h1Time, h1Price, h1HalfW, h1Score, false, true, false)
+
+if newH4
+    f_insert_or_merge(h4Time, h4Price, h4HalfW, h4Score, false, false, true)
+
+//====================================================
+// OVERFLOW CLEANUP
+//====================================================
+if array.size(zoneCenter) > maxStoredZones
+    weakestIdx = 0
+    weakestRank = 10e10
+    szOver = array.size(zoneCenter)
+
+    for i = 0 to szOver - 1
+        zs   = array.get(zoneRawScore, i)
+        zlt  = array.get(zoneLastTime, i)
+        ch   = array.get(zoneHits, i)
+        tc   = array.get(zoneTouches, i)
+        rc   = array.get(zoneRejects, i)
+        fb   = array.get(zoneFalseBr, i)
+        ib   = array.get(zoneInside, i)
+        dq   = array.get(zoneDepthQ, i)
+
+        s15  = array.get(zoneSrc15, i)
+        s1h  = array.get(zoneSrc1H, i)
+        s4h  = array.get(zoneSrc4H, i)
+        sp   = array.get(zoneSpent, i)
+        fl   = array.get(zoneFlipped, i)
+
+        ageHours = (time - zlt) / 3600000.0
+        eff      = f_eff_score(zs, ageHours, ch, tc, rc, fb, ib, dq, s15, s1h, s4h, sp, fl)
+        rank     = eff + (sp ? -0.50 : 0.20)
+
+        if rank < weakestRank
+            weakestRank := rank
+            weakestIdx  := i
+
+    array.remove(zoneCenter,   weakestIdx)
+    array.remove(zoneHalfW,    weakestIdx)
+    array.remove(zoneRawScore, weakestIdx)
+    array.remove(zoneBornTime, weakestIdx)
+    array.remove(zoneLastTime, weakestIdx)
+    array.remove(zoneHits,     weakestIdx)
+
+    array.remove(zoneSpent,    weakestIdx)
+    array.remove(zoneFlipped,  weakestIdx)
+    array.remove(zoneActive,   weakestIdx)
+
+    array.remove(zoneSrc15,    weakestIdx)
+    array.remove(zoneSrc1H,    weakestIdx)
+    array.remove(zoneSrc4H,    weakestIdx)
+
+    array.remove(zoneTouches,  weakestIdx)
+    array.remove(zoneRejects,  weakestIdx)
+    array.remove(zoneFalseBr,  weakestIdx)
+    array.remove(zoneInside,   weakestIdx)
+    array.remove(zoneDepthQ,   weakestIdx)
+
+//====================================================
+// LEVEL STATE UPDATE
+//====================================================
+szState = array.size(zoneCenter)
+if szState > 0
+    for i = 0 to szState - 1
+        zc = array.get(zoneCenter, i)
+        zhBase = array.get(zoneHalfW, i)
+        tc = array.get(zoneTouches, i)
+        rc = array.get(zoneRejects, i)
+        fb = array.get(zoneFalseBr, i)
+        dq = array.get(zoneDepthQ, i)
+
+        zh = f_live_halfw(zhBase, tc, rc, fb, dq)
+        top = zc + zh
+        bot = zc - zh
+
+        activeNow = high >= bot and low <= top
+        activePrev = array.get(zoneActive, i)
+        spent = array.get(zoneSpent, i)
+
+        if activeNow
+            array.set(zoneInside, i, array.get(zoneInside, i) + 1)
+            array.set(zoneLastTime, i, time)
+
+            if not activePrev
+                array.set(zoneTouches, i, array.get(zoneTouches, i) + 1)
+
+                depthAtr = math.max(zc - close, 0.0) / math.max(atr, syminfo.mintick)
+                sweepAtr = math.max(high - zc, 0.0) / math.max(atr, syminfo.mintick)
+                barRange = math.max(high - low, syminfo.mintick)
+                bearBodyFrac = close < open ? (open - close) / barRange : 0.0
+
+                cleanReject = close < zc and close < open and depthAtr >= minRejectDepthAtr and high <= top + atr * 0.14
+                softReject  = close < zc and depthAtr >= minRejectDepthAtr * 0.75 and high <= top + atr * 0.22
+                dirtyProbe  = high > top and close <= top
+                fullAccept  = close > top
+
+                if cleanReject or softReject
+                    array.set(zoneRejects, i, array.get(zoneRejects, i) + 1)
+                    qAdd = f_clamp(depthAtr / reactionDepthNorm, 0.0, 1.8) + f_clamp(bearBodyFrac / 0.55, 0.0, 1.1) - f_clamp(sweepAtr / 1.6, 0.0, 0.45)
+                    array.set(zoneDepthQ, i, math.max(array.get(zoneDepthQ, i) + qAdd, 0.0))
+
+                if dirtyProbe
+                    array.set(zoneFalseBr, i, array.get(zoneFalseBr, i) + 1)
+                    array.set(zoneDepthQ, i, math.max(array.get(zoneDepthQ, i) - 0.10, 0.0))
+
+                if fullAccept
+                    array.set(zoneDepthQ, i, math.max(array.get(zoneDepthQ, i) - 0.12, 0.0))
+
+        if not spent and close > top + atr * invalidBreakAtr
+            array.set(zoneSpent, i, true)
+            array.set(zoneLastTime, i, time)
+            spent := true
+
+        if spent and close < zc - zh * flipBackFrac
+            array.set(zoneFlipped, i, true)
+            array.set(zoneLastTime, i, time)
+
+        array.set(zoneActive, i, activeNow)
+
+//====================================================
+// DISPLAY OBJECTS
+//====================================================
+var box[]   dispBoxes  = array.new_box()
+var line[]  dispLines  = array.new_line()
+var label[] dispLabels = array.new_label()
+
+if barstate.isfirst
+    for i = 0 to displayCount - 1
+        b = box.new(left = time, top = close, right = time + 1, bottom = close, xloc = xloc.bar_time, bgcolor = color.new(color.black, 100), border_color = color.new(color.black, 100))
+        l = line.new(x1 = time, y1 = close, x2 = time + 1, y2 = close, xloc = xloc.bar_time, color = color.new(color.black, 100), width = 1)
+        lb = label.new(x = time, y = close, text = "", xloc = xloc.bar_time, style = label.style_label_right, color = color.new(color.black, 100), textcolor = color.white, size = size.tiny)
+
+        array.push(dispBoxes, b)
+        array.push(dispLines, l)
+        array.push(dispLabels, lb)
+
+//====================================================
+// PICK DISPLAY LEVELS
+//====================================================
+var int[] selectedIdx = array.new_int()
+array.clear(selectedIdx)
+
+curSizeSel = array.size(zoneCenter)
+
+if curSizeSel > 0
+    for pick = 0 to displayCount - 1
+        bestIdx = -1
+        bestPriority = -1e10
+
+        for i = 0 to curSizeSel - 1
+            alreadyPicked = false
+
+            if array.size(selectedIdx) > 0
+                for j = 0 to array.size(selectedIdx) - 1
+                    if array.get(selectedIdx, j) == i
+                        alreadyPicked := true
+
+            if not alreadyPicked
+                zc  = array.get(zoneCenter, i)
+                zh0 = array.get(zoneHalfW, i)
+                tc  = array.get(zoneTouches, i)
+                rc  = array.get(zoneRejects, i)
+                fb  = array.get(zoneFalseBr, i)
+                ib  = array.get(zoneInside, i)
+                dq  = array.get(zoneDepthQ, i)
+
+                zh = f_live_halfw(zh0, tc, rc, fb, dq)
+
+                zs  = array.get(zoneRawScore, i)
+                zlt = array.get(zoneLastTime, i)
+                ch  = array.get(zoneHits, i)
+
+                s15 = array.get(zoneSrc15, i)
+                s1h = array.get(zoneSrc1H, i)
+                s4h = array.get(zoneSrc4H, i)
+
+                sp  = array.get(zoneSpent, i)
+                fl  = array.get(zoneFlipped, i)
+
+                ageHours = (time - zlt) / 3600000.0
+                eff      = f_eff_score(zs, ageHours, ch, tc, rc, fb, ib, dq, s15, s1h, s4h, sp, fl)
+                prob     = f_prob(eff)
+                tier     = f_prob_tier(prob, s15, s1h, s4h)
+
+                distAtr  = (zc - close) / math.max(atr, syminfo.mintick)
+                aboveOk  = zc + zh >= close and distAtr <= maxAboveAtr
+                belowOk  = showHistoricalBelow and zc - zh < close and math.abs(distAtr) <= maxBelowAtr
+                spentOk  = showSpentLevels or not sp
+
+                if spentOk and prob >= yellowProb and (aboveOk or belowOk)
+                    nearBoost = distAtr >= 0 ? math.max(0.40 - math.abs(distAtr) * 0.035, 0.0) : math.max(0.18 - math.abs(distAtr) * 0.012, 0.0)
+                    distPenalty = distAtr >= 0 ? math.abs(distAtr) * 0.065 : math.abs(distAtr) * 0.085
+                    stageAdj = fl ? 0.10 : sp ? -0.16 : 0.12
+                    sideAdj = aboveOk ? 0.34 : -0.14
+                    displayPriority = eff + nearBoost - distPenalty + sideAdj + stageAdj + tier * 0.10
+
+                    if displayPriority > bestPriority
+                        bestPriority := displayPriority
+                        bestIdx      := i
+
+        if bestIdx >= 0
+            array.push(selectedIdx, bestIdx)
+
+//====================================================
+// DRAW ONLY ON LAST BAR
+//====================================================
+rightMs = futureHours * 3600000
+
+if barstate.islast
+    for slot = 0 to displayCount - 1
+        b  = array.get(dispBoxes, slot)
+        l  = array.get(dispLines, slot)
+        lb = array.get(dispLabels, slot)
+
+        if slot < array.size(selectedIdx)
+            idx = array.get(selectedIdx, slot)
+
+            zc  = array.get(zoneCenter, idx)
+            zh0 = array.get(zoneHalfW, idx)
+            tc  = array.get(zoneTouches, idx)
+            rc  = array.get(zoneRejects, idx)
+            fb  = array.get(zoneFalseBr, idx)
+            ib  = array.get(zoneInside, idx)
+            dq  = array.get(zoneDepthQ, idx)
+
+            zh = f_live_halfw(zh0, tc, rc, fb, dq)
+
+            zs  = array.get(zoneRawScore, idx)
+            zbt = array.get(zoneBornTime, idx)
+            zlt = array.get(zoneLastTime, idx)
+            ch  = array.get(zoneHits, idx)
+
+            s15 = array.get(zoneSrc15, idx)
+            s1h = array.get(zoneSrc1H, idx)
+            s4h = array.get(zoneSrc4H, idx)
+
+            sp  = array.get(zoneSpent, idx)
+            fl  = array.get(zoneFlipped, idx)
+
+            ageHours = (time - zlt) / 3600000.0
+            eff      = f_eff_score(zs, ageHours, ch, tc, rc, fb, ib, dq, s15, s1h, s4h, sp, fl)
+            prob     = f_prob(eff)
+            tier     = f_prob_tier(prob, s15, s1h, s4h)
+            revP     = f_rev_prob(eff, dq, fb, ib, s15, s1h, s4h, bearH4, h4RegZNow, h4RegSlopeNow)
+
+            zColor   = f_zone_color(tier)
+            zName    = f_zone_name(tier)
+            srcTxt   = f_src_text(s15, s1h, s4h)
+
+            stageTxt = fl ? "FLIPPED" : sp ? "SPENT" : tc == 0 ? "FRESH" : "TESTED"
+            typeTxt  = revP >= reversalProb ? "REVERSAL" : "STALL"
+
+            topY     = zc + zh
+            botY     = zc - zh
+            leftT    = zbt
+            rightT   = time + rightMs
+
+            fillAlpha = fl ? 86 : sp ? 92 : 82
+            borderCol = sp ? color.new(zColor, 35) : zColor
+            lineCol   = sp ? color.new(zColor, 35) : zColor
+
+            lblTxt = zName + " " + str.tostring(prob * 100.0, "#.0") + "% | " + srcTxt + " | " + stageTxt + " | " + typeTxt
+
+            box.set_lefttop(b, leftT, topY)
+            box.set_rightbottom(b, rightT, botY)
+            box.set_bgcolor(b, color.new(zColor, fillAlpha))
+            box.set_border_color(b, borderCol)
+
+            line.set_xy1(l, leftT, zc)
+            line.set_xy2(l, rightT, zc)
+            line.set_color(l, showCenterLine ? lineCol : color.new(color.black, 100))
+            line.set_style(l, sp ? line.style_dotted : line.style_solid)
+            line.set_width(l, 1)
+
+            if showLabels
+                label.set_x(lb, rightT)
+                label.set_y(lb, zc)
+                label.set_text(lb, lblTxt)
+                label.set_color(lb, color.new(zColor, sp ? 35 : 10))
+                label.set_textcolor(lb, color.white)
+            else
+                label.set_x(lb, time)
+                label.set_y(lb, close)
+                label.set_text(lb, "")
+                label.set_color(lb, color.new(color.black, 100))
+        else
+            box.set_lefttop(b, time, close)
+            box.set_rightbottom(b, time + 1, close)
+            box.set_bgcolor(b, color.new(color.black, 100))
+            box.set_border_color(b, color.new(color.black, 100))
+
+            line.set_xy1(l, time, close)
+            line.set_xy2(l, time + 1, close)
+            line.set_color(l, color.new(color.black, 100))
+
+            label.set_x(lb, time)
+            label.set_y(lb, close)
+            label.set_text(lb, "")
+            label.set_color(lb, color.new(color.black, 100))
+
+//====================================================
+// REGRESSION DASHBOARD
+//====================================================
+var table regT = table.new(position.bottom_right, 3, 8, border_width = 1)
+
+if barstate.islast
+    if showRegTable
+        localReg  = f_reg_z()
+        heatScore = f_heat_score(localReg, h1RegZNow, h4RegZNow, h4RegSlopeNow, bearH4)
+        heatColor = f_heat_color(heatScore)
+
+        bestLvlTxt = "-"
+        bestLvlSub = "-"
+        bestLvlCol = color.new(color.black, 0)
+
+        if array.size(selectedIdx) > 0
+            leadIdx = array.get(selectedIdx, 0)
+            zcLead  = array.get(zoneCenter, leadIdx)
+            zsLead  = array.get(zoneRawScore, leadIdx)
+            zltLead = array.get(zoneLastTime, leadIdx)
+            chLead  = array.get(zoneHits, leadIdx)
+            tcLead  = array.get(zoneTouches, leadIdx)
+            rcLead  = array.get(zoneRejects, leadIdx)
+            fbLead  = array.get(zoneFalseBr, leadIdx)
+            ibLead  = array.get(zoneInside, leadIdx)
+            dqLead  = array.get(zoneDepthQ, leadIdx)
+            spLead  = array.get(zoneSpent, leadIdx)
+            flLead  = array.get(zoneFlipped, leadIdx)
+            s15Lead = array.get(zoneSrc15, leadIdx)
+            s1hLead = array.get(zoneSrc1H, leadIdx)
+            s4hLead = array.get(zoneSrc4H, leadIdx)
+
+            ageLead = (time - zltLead) / 3600000.0
+            effLead = f_eff_score(zsLead, ageLead, chLead, tcLead, rcLead, fbLead, ibLead, dqLead, s15Lead, s1hLead, s4hLead, spLead, flLead)
+            probLead = f_prob(effLead)
+            tierLead = f_prob_tier(probLead, s15Lead, s1hLead, s4hLead)
+            revLead  = f_rev_prob(effLead, dqLead, fbLead, ibLead, s15Lead, s1hLead, s4hLead, bearH4, h4RegZNow, h4RegSlopeNow)
+            distLead = (zcLead - close) / math.max(atr, syminfo.mintick)
+            stageLead = flLead ? "FLIP" : spLead ? "SPENT" : tcLead == 0 ? "FRESH" : "TEST"
+            typeLead  = revLead >= reversalProb ? "REV" : "STALL"
+            bestLvlTxt := f_zone_name(tierLead) + " " + str.tostring(probLead * 100.0, "#.0") + "%"
+            bestLvlSub := str.tostring(distLead, "#.1") + " ATR | " + stageLead + " | " + typeLead
+            bestLvlCol := f_zone_color(tierLead)
+
+        table.cell(regT, 0, 0, "NAGASAKI_V9", text_color = color.white, bgcolor = color.new(color.black, 0))
+        table.cell(regT, 1, 0, bearH4 ? "BEAR" : "NEUTRAL", text_color = bearH4 ? color.red : color.white, bgcolor = color.new(color.black, 0))
+        table.cell(regT, 2, 0, f_heat_name(heatScore), text_color = color.white, bgcolor = color.new(heatColor, 60))
+
+        table.cell(regT, 0, 1, "Local zReg", text_color = color.white, bgcolor = color.new(color.black, 0))
+        table.cell(regT, 1, 1, str.tostring(localReg, "#.00"), text_color = localReg > 2.0 ? color.red : localReg > 1.5 ? color.orange : color.white, bgcolor = color.new(color.black, 0))
+        table.cell(regT, 2, 1, localReg > 2.0 ? "EXT" : localReg > 1.5 ? "HOT" : localReg > 1.0 ? "WARM" : "OK", text_color = color.white, bgcolor = color.new(localReg > 2.0 ? color.red : localReg > 1.5 ? color.orange : color.new(color.teal, 0), 65))
+
+        table.cell(regT, 0, 2, "H1 zReg", text_color = color.white, bgcolor = color.new(color.black, 0))
+        table.cell(regT, 1, 2, str.tostring(h1RegZNow, "#.00"), text_color = h1RegZNow > 1.8 ? color.red : h1RegZNow > 1.3 ? color.orange : color.white, bgcolor = color.new(color.black, 0))
+        table.cell(regT, 2, 2, h1RegZNow > 1.8 ? "HOT" : h1RegZNow > 1.3 ? "WARM" : "OK", text_color = color.white, bgcolor = color.new(h1RegZNow > 1.8 ? color.red : h1RegZNow > 1.3 ? color.orange : color.new(color.teal, 0), 65))
+
+        table.cell(regT, 0, 3, "H4 zReg", text_color = color.white, bgcolor = color.new(color.black, 0))
+        table.cell(regT, 1, 3, str.tostring(h4RegZNow, "#.00"), text_color = h4RegZNow > 1.3 ? color.red : h4RegZNow > 1.0 ? color.orange : color.white, bgcolor = color.new(color.black, 0))
+        table.cell(regT, 2, 3, h4RegZNow > 1.3 ? "HOT" : h4RegZNow > 1.0 ? "WARM" : "OK", text_color = color.white, bgcolor = color.new(h4RegZNow > 1.3 ? color.red : h4RegZNow > 1.0 ? color.orange : color.new(color.teal, 0), 65))
+
+        table.cell(regT, 0, 4, "H4 slope", text_color = color.white, bgcolor = color.new(color.black, 0))
+        table.cell(regT, 1, 4, str.tostring(h4RegSlopeNow, "#.0000"), text_color = h4RegSlopeNow < 0 ? color.red : color.white, bgcolor = color.new(color.black, 0))
+        table.cell(regT, 2, 4, h4RegSlopeNow < 0 ? "DOWN" : "UP", text_color = color.white, bgcolor = color.new(h4RegSlopeNow < 0 ? color.red : color.new(color.teal, 0), 65))
+
+        table.cell(regT, 0, 5, "Heat", text_color = color.white, bgcolor = color.new(color.black, 0))
+        table.cell(regT, 1, 5, str.tostring(heatScore, "#.0"), text_color = color.white, bgcolor = color.new(color.black, 0))
+        table.cell(regT, 2, 5, f_heat_name(heatScore), text_color = color.white, bgcolor = color.new(heatColor, 60))
+
+        table.cell(regT, 0, 6, "Best lvl", text_color = color.white, bgcolor = color.new(color.black, 0))
+        table.cell(regT, 1, 6, bestLvlTxt, text_color = color.white, bgcolor = color.new(bestLvlCol, 60))
+        table.cell(regT, 2, 6, bestLvlSub, text_color = color.white, bgcolor = color.new(bestLvlCol, 78))
+
+        table.cell(regT, 0, 7, "Mode", text_color = color.white, bgcolor = color.new(color.black, 0))
+        table.cell(regT, 1, 7, mode, text_color = color.white, bgcolor = color.new(color.black, 0))
+        table.cell(regT, 2, 7, useM15 ? "1H+4H+15m" : "1H+4H", text_color = color.white, bgcolor = color.new(color.black, 0))
+    else
+        for row = 0 to 7
+            for col = 0 to 2
+                table.cell(regT, col, row, "", text_color = color.white, bgcolor = color.new(color.black, 100))

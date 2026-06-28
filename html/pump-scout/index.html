@@ -1,0 +1,1217 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>TradeForge • Pump Scout v3</title>
+  <meta name="description" content="TradeForge Pump Scout v3 — единый адаптивный модуль для desktop, tablet и mobile с live MEXC perpetual board." />
+  <style>
+    :root{
+      --bg:#050608;
+      --panel:rgba(10,12,14,.88);
+      --panel-2:rgba(8,10,12,.78);
+      --stroke:rgba(255,255,255,.08);
+      --stroke-2:rgba(255,255,255,.13);
+      --text:rgba(239,242,246,.95);
+      --muted:rgba(239,242,246,.62);
+      --muted-2:rgba(239,242,246,.44);
+      --gold:#b99b4a;
+      --gold-2:#e1c26a;
+      --mint:#8cffdc;
+      --red:#ff7a7a;
+      --blue:#92b2ff;
+      --radius-xl:18px;
+      --radius-lg:16px;
+      --radius-md:12px;
+      --shadow:0 28px 90px rgba(0,0,0,.56);
+      --glow:0 0 0 1px rgba(185,155,74,.24), 0 0 22px rgba(185,155,74,.12);
+      --page-pad:clamp(12px, 2vw, 24px);
+      --shell-max:1500px;
+      --topbar-h:64px;
+      --mobile-dock-h:0px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    html,body{margin:0;min-height:100%}
+    body{
+      color:var(--text);
+      font-family:ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 640px at 18% -16%, rgba(87,97,155,.26), transparent 62%),
+        radial-gradient(1000px 540px at 82% 2%, rgba(185,155,74,.18), transparent 56%),
+        radial-gradient(900px 520px at 70% 95%, rgba(36,132,114,.16), transparent 60%),
+        linear-gradient(180deg, #040506, #06080a 36%, #050608 100%);
+      overflow-x:hidden;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(transparent 0, transparent 23px, rgba(255,255,255,.025) 24px),
+        linear-gradient(90deg, transparent 0, transparent 23px, rgba(255,255,255,.025) 24px);
+      background-size:24px 24px;
+      mask-image:radial-gradient(1200px 740px at 50% 10%, rgba(0,0,0,.85), rgba(0,0,0,.22) 66%, transparent 88%);
+      opacity:.36;
+      z-index:0;
+    }
+
+    a{color:inherit;text-decoration:none}
+    button,input{font:inherit}
+    :focus-visible{outline:2px solid rgba(185,155,74,.72); outline-offset:3px}
+
+    .shell{
+      position:relative;
+      z-index:1;
+      width:min(var(--shell-max), calc(100% - 18px));
+      margin:12px auto;
+      border:1px solid var(--stroke);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.012));
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      min-height:calc(100svh - 24px);
+    }
+    .shell::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      pointer-events:none;
+      background:
+        radial-gradient(900px 340px at 22% 0%, rgba(140,255,220,.08), transparent 60%),
+        radial-gradient(900px 340px at 78% 0%, rgba(185,155,74,.12), transparent 58%);
+      z-index:0;
+    }
+
+    .topbar{
+      position:relative;
+      z-index:2;
+      display:flex;
+      align-items:center;
+      gap:18px;
+      min-height:var(--topbar-h);
+      padding:14px 18px;
+      background:rgba(0,0,0,.56);
+      border-bottom:1px solid rgba(255,255,255,.09);
+      box-shadow:0 14px 50px rgba(0,0,0,.35);
+      backdrop-filter:blur(10px);
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:190px;
+    }
+    .brand svg{width:32px;height:32px;flex:0 0 auto;filter:drop-shadow(0 0 16px rgba(140,255,220,.10))}
+    .brand-name{
+      font-weight:800;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      font-size:20px;
+      line-height:1;
+      white-space:nowrap;
+    }
+    .nav{
+      display:flex;
+      gap:26px;
+      color:var(--muted);
+      font-size:14px;
+      margin-left:0;
+    }
+    .nav a{
+      color:inherit;
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid transparent;
+      background:rgba(255,255,255,0);
+      white-space:nowrap;
+      transition:.15s ease;
+    }
+    .nav a:hover{
+      color:var(--text);
+      border-color:rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+    }
+    .nav a.active{
+      color:var(--text);
+      position:relative;
+    }
+    .nav a.active::after{
+      content:"";
+      position:absolute;
+      left:10px;
+      right:10px;
+      bottom:-10px;
+      height:2px;
+      background:linear-gradient(90deg, transparent, rgba(185,155,74,.9), transparent);
+    }
+
+    .top-actions{
+      margin-left:auto;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .mobile-app-nav{
+      display:none;
+      position:sticky;
+      top:0;
+      z-index:49;
+      padding:8px 10px;
+      gap:8px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      background:rgba(7,8,10,.78);
+      border-bottom:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(12px);
+    }
+    .mobile-app-nav::-webkit-scrollbar{display:none}
+    .mobile-app-link{
+      flex:0 0 auto;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:36px;
+      padding:0 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(20,22,26,.55);
+      color:rgba(235,235,235,.86);
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.04em;
+      white-space:nowrap;
+      text-decoration:none;
+    }
+    .mobile-app-link.active{
+      border-color: rgba(185,155,74,.55);
+      background: linear-gradient(180deg, rgba(185,155,74,.18), rgba(20,22,26,.55));
+      box-shadow: 0 0 0 1px rgba(185,155,74,.25), 0 12px 40px rgba(185,155,74,.08);
+      color: var(--text);
+    }
+    .icon-btn,
+    .ghost-btn,
+    .solid-btn{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      color:var(--text);
+      border-radius:10px;
+      min-height:40px;
+      padding:0 14px;
+      font-weight:700;
+      letter-spacing:.04em;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+    .icon-btn{width:34px;min-height:34px;height:34px;padding:0}
+    .icon-btn svg{width:18px;height:18px}
+    .icon-btn:hover,
+    .chip-btn:hover,
+    .ghost-btn:hover,
+    .solid-btn:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.16)}
+    .solid-btn{
+      border-color:rgba(185,155,74,.42);
+      background:linear-gradient(180deg, rgba(185,155,74,.22), rgba(0,0,0,.22));
+      box-shadow:var(--glow);
+      color:rgba(255,248,228,.96);
+    }
+    .explain-pill{
+      height:32px;
+      padding:0 14px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      display:flex;
+      align-items:center;
+      gap:8px;
+      cursor:pointer;
+      transition:.15s ease;
+    }
+    .explain-pill:hover{ box-shadow:0 0 0 1px rgba(255,255,255,.10); }
+    .explain-pill .badge{
+      width:10px;height:10px;border-radius:3px;
+      background:linear-gradient(135deg, rgba(185,155,74,.95), rgba(140,255,220,.70));
+      box-shadow:0 0 18px rgba(185,155,74,.20);
+    }
+    .explain-pill span{ font-weight:700; letter-spacing:.06em; font-size:13px; opacity:.95; }
+    .tag .dot,
+    .status-dot{
+      width:9px;height:9px;border-radius:999px;flex:0 0 auto;
+      background:var(--mint);
+      box-shadow:0 0 16px rgba(140,255,220,.34);
+    }
+    .status-dot.degraded,
+    .tag .dot.red{background:var(--red);box-shadow:0 0 16px rgba(255,122,122,.34)}
+
+    .layout{
+      position:relative;
+      z-index:1;
+      display:grid;
+      grid-template-columns:300px minmax(0, 1fr);
+      gap:0;
+      min-height:calc(100svh - var(--topbar-h) - 24px);
+    }
+
+    .sidebar{
+      padding:16px 14px;
+      border-right:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.54));
+    }
+    .sidebar-inner{
+      position:sticky;
+      top:calc(var(--topbar-h) + 16px);
+      display:grid;
+      gap:12px;
+    }
+
+    .main{
+      padding:16px;
+      display:grid;
+      gap:12px;
+      align-content:start;
+    }
+
+    .panel,
+    .hero,
+    .board,
+    .feature,
+    .footer-card{
+      position:relative;
+      overflow:hidden;
+      border-radius:var(--radius-lg);
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg, rgba(255,255,255,.032), rgba(0,0,0,.32));
+      box-shadow:0 16px 60px rgba(0,0,0,.34);
+    }
+    .panel::after,
+    .hero::after,
+    .board::after,
+    .feature::after,
+    .footer-card::after{
+      content:"";
+      position:absolute; inset:0; pointer-events:none;
+      background:
+        radial-gradient(700px 180px at 0% 0%, rgba(140,255,220,.05), transparent 58%),
+        radial-gradient(680px 200px at 100% 0%, rgba(185,155,74,.07), transparent 55%);
+    }
+
+    .panel-body,
+    .hero-body,
+    .board-body,
+    .feature-body,
+    .footer-body{position:relative;z-index:1;padding:14px}
+    .section-kicker{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.16em;
+      color:rgba(255,255,255,.7);
+      font-weight:800;
+      margin-bottom:6px;
+    }
+    .section-title{
+      font-size:clamp(20px, 2.7vw, 28px);
+      line-height:1;
+      font-weight:900;
+      letter-spacing:-.04em;
+      margin:0;
+    }
+    .section-copy,
+    .muted-copy{
+      color:var(--muted);
+      line-height:1.58;
+      font-size:13px;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:minmax(0, 1.18fr) minmax(320px, .82fr);
+      gap:10px;
+      align-items:stretch;
+    }
+    .hero-copy{display:grid;gap:10px;align-content:start}
+    .hero-tags{display:flex;flex-wrap:wrap;gap:8px}
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:24px;
+      padding:0 9px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:.1em;
+      font-weight:800;
+    }
+    .hero-actions{display:flex;flex-wrap:wrap;gap:8px}
+    .hero-side{
+      display:grid;
+      gap:10px;
+      align-content:start;
+    }
+    .hero-note{
+      min-height:100%;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      display:grid;
+      gap:8px;
+      align-content:start;
+    }
+    .metric-grid{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+      gap:8px;
+    }
+    .metric{
+      padding:10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+      display:grid;
+      gap:6px;
+    }
+    .metric-k{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);font-weight:800}
+    .metric-v{font-size:clamp(18px, 2vw, 24px);font-weight:900;letter-spacing:-.03em}
+    .metric-s{font-size:12px;color:var(--muted)}
+
+    .stat-list{display:grid;gap:10px}
+    .kv{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:11px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+    }
+    .kv .k{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);font-weight:800}
+    .kv .v{font-size:13px;font-weight:800;text-align:right}
+
+    .action-grid{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px}
+
+    .lane-list,
+    .workflow-list,
+    .notes-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+    .lane-item,
+    .workflow-item,
+    .notes-list li{
+      padding:11px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+    }
+    .lane-line,
+    .workflow-line{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px}
+    .lane-name,
+    .workflow-name{font-weight:900;letter-spacing:-.02em}
+    .lane-copy,
+    .workflow-copy{font-size:12px;color:var(--muted);line-height:1.55}
+    .lane-badge{
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      font-weight:900;
+      border:1px solid rgba(255,255,255,.12);
+      white-space:nowrap;
+    }
+    .lane-badge.ignite{color:var(--mint);background:rgba(140,255,220,.10)}
+    .lane-badge.fade{color:#f4d48a;background:rgba(225,194,106,.09)}
+    .lane-badge.dump{color:var(--red);background:rgba(255,122,122,.10)}
+
+    .board-head{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+    }
+    .board-topline{display:flex;flex-wrap:wrap;gap:8px}
+    .board-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:12px;
+    }
+    .lane-board{
+      min-width:0;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.025);
+      overflow:hidden;
+    }
+    .lane-board-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      padding:11px 11px 9px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .lane-board-title{font-size:18px;font-weight:900;line-height:1;letter-spacing:-.04em;margin:0 0 6px}
+    .lane-board-copy{font-size:12px;color:var(--muted);line-height:1.55;margin:0}
+    .lane-board-body{padding:11px;display:grid;gap:8px}
+
+    .row-list{display:grid;gap:10px}
+    .row-item{
+      display:grid;
+      grid-template-columns:auto minmax(0, 1fr) auto;
+      gap:12px;
+      align-items:center;
+      padding:11px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.07);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+    }
+    .sym{font-size:13px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+    .meta{font-size:12px;color:var(--muted);line-height:1.45}
+    .tiny{font-size:11px;color:var(--muted-2);line-height:1.45;margin-top:3px}
+    .chg{font-size:13px;font-weight:900;white-space:nowrap}
+    .chg.up{color:var(--mint)}
+    .chg.down{color:var(--red)}
+    .bar{margin-top:8px}
+    .track{height:6px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+    .fill{height:100%;border-radius:999px;background:linear-gradient(90deg, rgba(140,255,220,.34), rgba(140,255,220,.96))}
+    .fill.down{background:linear-gradient(90deg, rgba(255,122,122,.28), rgba(255,122,122,.96))}
+    .board-empty{
+      padding:16px;
+      border-radius:14px;
+      border:1px dashed rgba(255,255,255,.12);
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      text-align:center;
+      background:rgba(255,255,255,.02);
+    }
+
+    .feature-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:12px;
+    }
+    .feature h3,
+    .footer-card h3{margin:0 0 8px;font-size:clamp(22px, 2.4vw, 30px);line-height:1;font-weight:900;letter-spacing:-.04em}
+    .feature p,
+    .footer-card p,
+    .footer-card li{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
+
+    .footer-grid{
+      display:grid;
+      grid-template-columns:minmax(0, 1.15fr) minmax(300px, .85fr);
+      gap:12px;
+      padding-bottom:calc(16px + var(--mobile-dock-h));
+    }
+
+    .mobile-dock{
+      display:none;
+      position:fixed;
+      left:12px;
+      right:12px;
+      bottom:max(12px, env(safe-area-inset-bottom));
+      z-index:40;
+      padding:8px;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:18px;
+      background:rgba(7,9,11,.84);
+      backdrop-filter:blur(14px);
+      box-shadow:0 22px 80px rgba(0,0,0,.55);
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+      gap:8px;
+    }
+    .dock-btn{
+      min-height:46px;
+      border:none;
+      border-radius:12px;
+      background:transparent;
+      color:var(--muted);
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+    }
+    .dock-btn.active{background:rgba(255,255,255,.06);color:var(--text)}
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:calc(18px + var(--mobile-dock-h));
+      transform:translateX(-50%) translateY(12px);
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(7,9,11,.92);
+      color:var(--text);
+      padding:11px 14px;
+      border-radius:12px;
+      box-shadow:0 22px 80px rgba(0,0,0,.5);
+      opacity:0;
+      pointer-events:none;
+      transition:.18s ease;
+      z-index:60;
+      font-size:13px;
+      font-weight:800;
+    }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    .reveal{opacity:0;transform:translateY(18px);transition:opacity .45s ease, transform .45s ease}
+    .reveal.in{opacity:1;transform:none}
+
+    @media (max-width: 1220px){
+      .layout{grid-template-columns:280px minmax(0, 1fr)}
+      .hero-grid{grid-template-columns:1fr}
+      .metric-grid{grid-template-columns:repeat(2, minmax(0, 1fr))}
+      .board-grid{grid-template-columns:repeat(2, minmax(0, 1fr))}
+      .board-grid .lane-board:last-child{grid-column:1 / -1}
+      .feature-grid{grid-template-columns:repeat(2, minmax(0, 1fr))}
+      .feature-grid .feature:last-child{grid-column:1 / -1}
+    }
+
+    @media (max-width: 980px){
+      .shell{width:100%;margin:0;border-radius:0;min-height:100svh}
+      .topbar{align-items:flex-start;flex-wrap:wrap}
+      .mobile-app-nav{display:flex !important;width:100%}
+      .top-actions{
+        margin-left:0;
+        width:100%;
+        display:grid;
+        grid-template-columns:34px minmax(0, 1fr);
+        justify-content:flex-start;
+      }
+      .top-actions .explain-pill{width:100%;justify-content:center;min-width:0}
+      .layout{grid-template-columns:1fr;min-height:auto}
+      .sidebar{border-right:none;border-bottom:1px solid rgba(255,255,255,.06)}
+      .sidebar-inner{position:static}
+      .board-grid,
+      .feature-grid,
+      .footer-grid{grid-template-columns:1fr}
+      .board-grid .lane-board:last-child,
+      .feature-grid .feature:last-child{grid-column:auto}
+    }
+
+    @media (max-width: 720px){
+      :root{--topbar-h:64px;--mobile-dock-h:76px}
+      .brand-name{font-size:17px}
+      .nav{display:none}
+      .mobile-app-nav{display:flex !important;padding:10px 12px}
+      .topbar{padding:10px 12px}
+      .top-actions{gap:8px}
+      .main{padding:14px}
+      .sidebar{padding:14px}
+      .panel-body,.hero-body,.board-body,.feature-body,.footer-body{padding:14px}
+      .section-title{font-size:clamp(28px, 10vw, 44px)}
+      .hero-actions,
+      .action-grid{grid-template-columns:1fr;display:grid}
+      .action-grid > *{width:100%}
+      .metric-grid{grid-template-columns:1fr 1fr}
+      .row-item{grid-template-columns:1fr;align-items:start}
+      .chg{text-align:left}
+      .lane-board-title{font-size:22px}
+      .mobile-dock{display:grid}
+    }
+
+    @media (max-width: 520px){
+      .metric-grid{grid-template-columns:1fr}
+      .top-actions{display:grid;grid-template-columns:34px minmax(0, 1fr);width:100%}
+      .top-actions .icon-btn,
+      .top-actions .explain-pill{width:100%}
+      .dock-btn{font-size:10px}
+    }
+
+    @media (max-width: 900px) and (orientation: landscape){
+      :root{--mobile-dock-h:0px}
+      .mobile-dock{display:none}
+      .layout{grid-template-columns:1fr}
+      .sidebar{padding-bottom:12px}
+      .sidebar-inner{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));align-items:start}
+      .sidebar-inner > :first-child{grid-column:1 / -1}
+      .board-grid{grid-template-columns:repeat(2, minmax(0, 1fr))}
+      .board-grid .lane-board:last-child{grid-column:1 / -1}
+      .footer-grid{padding-bottom:16px}
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      html{scroll-behavior:auto}
+      .reveal{opacity:1;transform:none;transition:none}
+      .toast{transition:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="/dashboard/" aria-label="TradeForge">
+        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M16 4L24 20H8L16 4Z" stroke="url(#g1)" stroke-width="1.8"/>
+          <path d="M16 11L20 19H12L16 11Z" fill="url(#g2)" opacity=".75"/>
+          <defs>
+            <linearGradient id="g1" x1="6" y1="4" x2="25" y2="21" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#8CFFDC"/>
+              <stop offset="1" stop-color="#E1C26A"/>
+            </linearGradient>
+            <linearGradient id="g2" x1="12" y1="11" x2="21" y2="19" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#E1C26A"/>
+              <stop offset="1" stop-color="#8CFFDC"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="brand-name">TradeForge</div>
+      </a>
+
+      <nav class="nav" aria-label="Разделы">
+        <a href="/dashboard/">BTC Engine</a>
+        <a href="/screener/">Market Radar</a>
+        <a class="active" href="/pump-scout/">Pump Scout</a>
+        <a href="/how-to-use/#reports">Reports</a>
+        <a href="/how-to-use/">How to use</a>
+        <a href="/settings/">Settings</a>
+      </nav>
+
+      <div class="top-actions">
+        <button class="icon-btn" title="Search" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button class="icon-btn" aria-label="User">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M4 20a8 8 0 1 1 16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="explain-pill" id="explainBtn" role="button" tabindex="0" aria-label="Explain">
+          <span class="badge"></span><span>Explain</span>
+        </div>
+      </div>
+    </header>
+
+    <nav class="mobile-app-nav" aria-label="Навигация по модулям">
+      <a class="mobile-app-link" href="/dashboard/">BTC Engine</a>
+      <a class="mobile-app-link" href="/screener/">Market Radar</a>
+      <a class="mobile-app-link active" href="/pump-scout/">Pump Scout</a>
+      <a class="mobile-app-link" href="/how-to-use/#reports">Reports</a>
+      <a class="mobile-app-link" href="/how-to-use/">How to use</a>
+      <a class="mobile-app-link" href="/settings/">Settings</a>
+    </nav>
+
+    <div class="layout">
+      <aside class="sidebar" id="intel">
+        <div class="sidebar-inner">
+          <section class="panel reveal">
+            <div class="panel-body">
+              <div class="section-kicker">Module status</div>
+              <div class="muted-copy">Боевой модуль по альтам на MEXC perpetual в том же ритме и shell, что и остальные экраны платформы.</div>
+              <div class="stat-list" style="margin-top:14px">
+                <div class="kv"><span class="k">Feed</span><span class="v" data-role="statusText">LIVE MEXC PERP</span></div>
+                <div class="kv"><span class="k">API</span><span class="v" id="apiStatus">checking…</span></div>
+                <div class="kv"><span class="k">Last refresh</span><span class="v" id="lastRefresh">—</span></div>
+                <div class="kv"><span class="k">Universe</span><span class="v" id="watchlistCount">0 contracts</span></div>
+              </div>
+              <div class="action-grid" style="margin-top:12px">
+                <a class="ghost-btn" href="/dashboard/">Open dashboard</a>
+                <a class="ghost-btn" href="/screener/?feed=mexc_perp">Open screener</a>
+                <button class="solid-btn" type="button" data-jump="#live-board">Open board</button>
+                <button class="ghost-btn" id="copySignalBtn" type="button">Copy status</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel reveal" id="workflow">
+            <div class="panel-body">
+              <div class="section-kicker">Lane logic</div>
+              <ul class="lane-list">
+                <li class="lane-item">
+                  <div class="lane-line"><span class="lane-name">Ignite</span><span class="lane-badge ignite">ignite</span></div>
+                  <div class="lane-copy">Свежий импульс, который всё ещё держит верх и выглядит как рабочий continuation read.</div>
+                </li>
+                <li class="lane-item">
+                  <div class="lane-line"><span class="lane-name">Fade-ready</span><span class="lane-badge fade">fade</span></div>
+                  <div class="lane-copy">Перегретое движение, где уже есть признаки stretch, stall и потенциального exhaustion.</div>
+                </li>
+                <li class="lane-item">
+                  <div class="lane-line"><span class="lane-name">Dump-watch</span><span class="lane-badge dump">dump</span></div>
+                  <div class="lane-copy">Downside pressure держится в том же модуле, чтобы short setup не выпадал из контекста.</div>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="panel reveal">
+            <div class="panel-body">
+              <div class="section-kicker" id="reports">Workflow</div>
+              <ul class="workflow-list">
+                <li class="workflow-item">
+                  <div class="workflow-line"><span class="workflow-name">01 · Scan</span></div>
+                  <div class="workflow-copy">Берём live movers из market API и быстро режем поток до короткого actionable board.</div>
+                </li>
+                <li class="workflow-item">
+                  <div class="workflow-line"><span class="workflow-name">02 · Burst</span></div>
+                  <div class="workflow-copy">В ignite попадают бумаги со свежестью импульса и заметной скоростью обновления.</div>
+                </li>
+                <li class="workflow-item">
+                  <div class="workflow-line"><span class="workflow-name">03 · Fade read</span></div>
+                  <div class="workflow-copy">Когда рост уже выглядит stretched, символ автоматически уходит в fade-ready lane.</div>
+                </li>
+                <li class="workflow-item">
+                  <div class="workflow-line"><span class="workflow-name">04 · Dump check</span></div>
+                  <div class="workflow-copy">Отдельная downside-полоса помогает держать long и short flow на одном экране.</div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section class="hero reveal" id="overview">
+          <div class="hero-body">
+            <div class="hero-grid">
+              <div class="hero-copy">
+                <div class="hero-tags">
+                  <span class="tag"><span class="dot"></span>Live MEXC feed</span>
+                  <span class="tag"><span class="dot"></span>Violent move board</span>
+                  <span class="tag"><span class="dot"></span>Terminal shell</span>
+                </div>
+                <div>
+                  <div class="section-kicker">Pump Scout module</div>
+                  <h1 class="section-title">Pump Scout — быстрый live-board по альтам на MEXC perpetual.</h1>
+                </div>
+                <div class="section-copy">Здесь один экран делает две вещи: быстро показывает живой импульс и сразу отделяет перегретые движения от ещё рабочих. Это тот же продуктовый модуль, а не отдельная витрина.</div>
+                <div class="hero-actions">
+                  <button class="solid-btn" type="button" data-jump="#live-board">Open board</button>
+                  <a class="ghost-btn" href="/screener/?feed=mexc_perp">Open screener</a>
+                  <a class="ghost-btn" href="/dashboard/">Open dashboard</a>
+                </div>
+              </div>
+
+              <div class="hero-side">
+                <div class="hero-note">
+                  <div class="section-kicker" id="settings">Live context</div>
+                  <div class="muted-copy">Контекст простой: сверху навигация модулей, слева короткий control-layer, в центре живой board с lane-логикой без лишней презентационности.</div>
+                  <div class="kv"><span class="k">Mode</span><span class="v" id="liveMode">mexc_perp</span></div>
+                  <div class="kv"><span class="k">Updated</span><span class="v" id="heroRefresh">—</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="metric-grid" style="margin-top:16px">
+              <div class="metric">
+                <div class="metric-k">Feed</div>
+                <div class="metric-v">MEXC PERP</div>
+                <div class="metric-s">Текущий рабочий режим.</div>
+              </div>
+              <div class="metric">
+                <div class="metric-k">Contracts live</div>
+                <div class="metric-v" id="liveTotal">0</div>
+                <div class="metric-s">Символы в текущем refresh.</div>
+              </div>
+              <div class="metric">
+                <div class="metric-k">Ignite / Fade</div>
+                <div class="metric-v"><span id="igniteCount">0</span> / <span id="fadeCount">0</span></div>
+                <div class="metric-s">Апсайдовые lane внутри board.</div>
+              </div>
+              <div class="metric">
+                <div class="metric-k">Dump-watch</div>
+                <div class="metric-v" id="dumpCount">0</div>
+                <div class="metric-s">Downside lane внутри того же экрана.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="board reveal" id="live-board">
+          <div class="board-body">
+            <div class="board-head">
+              <div>
+                <div class="section-kicker">Live board</div>
+                <h2 style="margin:0;font-size:clamp(24px, 2.7vw, 32px);line-height:.95;font-weight:900;letter-spacing:-.05em">Current violent move board</h2>
+                <p class="section-copy" style="margin:8px 0 0">Три lane на одном экране: свежий импульс, перегретый апсайд и downside pressure.</p>
+              </div>
+              <div class="board-topline">
+                <span class="tag">mode: <b style="margin-left:4px;color:var(--text)">mexc_perp</b></span>
+                <span class="tag"><span class="dot"></span>updated: <b id="boardUpdated" style="margin-left:4px;color:var(--text)">—</b></span>
+              </div>
+            </div>
+
+            <div class="board-grid">
+              <article class="lane-board">
+                <div class="lane-board-head">
+                  <div>
+                    <h3 class="lane-board-title">Ignite</h3>
+                    <p class="lane-board-copy">Свежие upside bursts, которые ещё не выглядят exhausted.</p>
+                  </div>
+                  <span class="lane-badge ignite">ignite</span>
+                </div>
+                <div class="lane-board-body"><div class="row-list" id="igniteRows"><div class="board-empty">Fetching live market data…</div></div></div>
+              </article>
+
+              <article class="lane-board">
+                <div class="lane-board-head">
+                  <div>
+                    <h3 class="lane-board-title">Fade-ready</h3>
+                    <p class="lane-board-copy">Overheated names, где уже заметно stretch / stall поведение.</p>
+                  </div>
+                  <span class="lane-badge fade">fade</span>
+                </div>
+                <div class="lane-board-body"><div class="row-list" id="fadeRows"><div class="board-empty">Fetching live market data…</div></div></div>
+              </article>
+
+              <article class="lane-board">
+                <div class="lane-board-head">
+                  <div>
+                    <h3 class="lane-board-title">Dump-watch</h3>
+                    <p class="lane-board-copy">Downside movers, которые держатся в том же workflow.</p>
+                  </div>
+                  <span class="lane-badge dump">dump</span>
+                </div>
+                <div class="lane-board-body"><div class="row-list" id="dumpRows"><div class="board-empty">Fetching live market data…</div></div></div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="feature-grid reveal" id="mobile">
+          <article class="feature">
+            <div class="feature-body">
+              <div class="section-kicker">Consistency</div>
+              <h3>Один визуальный язык</h3>
+              <p>Тот же dark premium shell, золотые акценты, плотность карточек и спокойная визуальная иерархия, что и у остальных страниц.</p>
+            </div>
+          </article>
+          <article class="feature">
+            <div class="feature-body">
+              <div class="section-kicker">Read speed</div>
+              <h3>Scan first, decide second</h3>
+              <p>Сначала глаз цепляет lane, потом символ, потом изменение и объём. Без ощущения отдельного лендинга внутри продукта.</p>
+            </div>
+          </article>
+          <article class="feature">
+            <div class="feature-body">
+              <div class="section-kicker">Mobile</div>
+              <h3>Portrait и landscape готовы</h3>
+              <p>В portrait — удобный вертикальный scroll и нижний dock. В landscape — широкая версия без обрезания и без двойного странного скролла.</p>
+            </div>
+          </article>
+        </section>
+
+        <section class="footer-grid reveal">
+          <article class="footer-card">
+            <div class="footer-body">
+              <div class="section-kicker">Ready layer</div>
+              <h3>Это уже финальный v3, который можно ставить как универсальную основу.</h3>
+              <p>Я специально убрал проблемную схему с fixed-height frame + hidden overflow на всей странице. Теперь модуль растёт по контенту, но визуально остаётся в том же premium shell.</p>
+              <div class="hero-actions" style="margin-top:14px">
+                <button class="solid-btn" type="button" data-jump="#overview">Back to top</button>
+                <button class="ghost-btn" type="button" id="copyFooterBtn">Copy summary</button>
+              </div>
+            </div>
+          </article>
+          <article class="footer-card">
+            <div class="footer-body">
+              <div class="section-kicker">Status / notes</div>
+              <ul class="notes-list">
+                <li>Оставлен live refresh против <b>api.tradeforge.art</b>.</li>
+                <li>Сохранены lane'ы: ignite, fade-ready, dump-watch.</li>
+                <li>Убран эффект «заплыва / обрезания» от жёстких высот.</li>
+                <li>Один HTML работает и на ПК, и на телефоне.</li>
+              </ul>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <nav class="mobile-dock" aria-label="Быстрая навигация по мобильной версии">
+    <button class="dock-btn active" type="button" data-jump="#overview">Top</button>
+    <button class="dock-btn" type="button" data-jump="#live-board">Board</button>
+    <button class="dock-btn" type="button" data-jump="#workflow">Flow</button>
+    <button class="dock-btn" type="button" data-jump="#mobile">Mobile</button>
+  </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const API = "https://api.tradeforge.art";
+      const previousBySymbol = new Map();
+      const toastEl = document.getElementById("toast");
+      let toastTimer = null;
+
+      const apiStatusEl = document.getElementById("apiStatus");
+      const lastRefreshEl = document.getElementById("lastRefresh");
+      const heroRefreshEl = document.getElementById("heroRefresh");
+      const boardUpdatedEl = document.getElementById("boardUpdated");
+      const liveModeEl = document.getElementById("liveMode");
+      const liveTotalEl = document.getElementById("liveTotal");
+      const igniteCountEl = document.getElementById("igniteCount");
+      const fadeCountEl = document.getElementById("fadeCount");
+      const dumpCountEl = document.getElementById("dumpCount");
+      const watchlistCountEl = document.getElementById("watchlistCount");
+
+      function toast(msg){
+        toastEl.textContent = msg;
+        toastEl.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1600);
+      }
+
+      function setTextAll(role, value){
+        document.querySelectorAll(`[data-role="${role}"]`).forEach((el) => el.textContent = value);
+      }
+
+      function fmtPct(v){
+        const n = Number(v || 0);
+        return `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
+      }
+
+      function fmtVol(v){
+        const n = Number(v || 0);
+        if (!Number.isFinite(n) || n <= 0) return "—";
+        if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
+        if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
+        if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+        return n.toFixed(2);
+      }
+
+      async function getJson(url){
+        const r = await fetch(url, { cache: "no-store" });
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      }
+
+      function analyzePump(row){
+        const ch24 = Number(row.change24h || 0);
+        const score = Number(row.pumpScore || 0);
+        const vol = Number(row.volume24h || 0);
+        const prev = previousBySymbol.get(row.symbol);
+        const delta24 = prev ? ch24 - Number(prev.change24h || 0) : 0;
+        const freshness = Math.max(0, ch24 > 0 ? delta24 / Math.max(ch24, 0.01) : 0);
+        const scoreUp = delta24 >= 0.4 || score >= 7.5;
+        const nearHigh = ch24 >= 6 && score >= 4.8;
+        const overheat = ch24 >= 12 || score >= 8.8 || freshness < 0.12;
+        const lane = overheat && nearHigh ? "fade" : ((scoreUp || freshness >= 0.18 || vol >= 800000) ? "ignite" : "fade");
+        return {
+          lane,
+          delta24,
+          note: lane === "ignite"
+            ? (freshness >= 0.22 ? "fresh impulse" : "still pressing highs")
+            : "stretch / stall read"
+        };
+      }
+
+      function analyzeDump(row){
+        const score = Number(row.pumpScore || 0);
+        return {
+          lane: "dump",
+          delta24: 0,
+          note: score >= 5 ? "active downside pressure" : "soft downside drift"
+        };
+      }
+
+      function renderBoard(rows, target, kind){
+        if (!target) return;
+        if (!rows.length){
+          target.innerHTML = `<div class="board-empty">No ${kind} contracts right now. The board keeps polling automatically.</div>`;
+          return;
+        }
+        target.innerHTML = rows.map((r, idx) => {
+          const up = Number(r.change24h || 0) >= 0;
+          const strength = Math.min(100, Math.max(12, Math.abs(Number(r.pumpScore || 0)) * 6 + idx * 1.5));
+          const note = r._note || `${fmtVol(r.volume24h)} vol`;
+          const delta = Number(r._delta24 || 0);
+          return `
+            <div class="row-item">
+              <div class="sym">#${String(idx + 1).padStart(2, "0")} ${r.symbol || "?"}</div>
+              <div>
+                <div class="meta">${r.name || "MEXC perp"} · ${fmtVol(r.volume24h)} vol · score ${Number(r.pumpScore || 0).toFixed(1)}</div>
+                <div class="tiny">${note}${up && delta ? ` · refresh drift ${fmtPct(delta)}` : ""}</div>
+                <div class="bar"><div class="track"><div class="fill${up ? "" : " down"}" style="width:${strength}%;"></div></div></div>
+              </div>
+              <div class="chg ${up ? "up" : "down"}">${fmtPct(r.change24h)}</div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      function setHealth(ok){
+        apiStatusEl.textContent = ok ? "online" : "degraded";
+        apiStatusEl.style.color = ok ? "var(--mint)" : "var(--red)";
+        setTextAll("statusText", ok ? "LIVE MEXC PERP" : "DEGRADED");
+      }
+
+      async function refresh(){
+        if (document.hidden) return;
+        const start = performance.now();
+        try{
+          const [top, dump, health] = await Promise.all([
+            getJson(`${API}/market/top?mode=mexc_perp&direction=pump&window=24h&limit=18`),
+            getJson(`${API}/market/top?mode=mexc_perp&direction=dump&window=24h&limit=6`),
+            getJson(`${API}/health`).catch(() => null)
+          ]);
+
+          const pumpRows = (top && Array.isArray(top.coins) ? top.coins : []).slice(0, 18);
+          const dumpRows = (dump && Array.isArray(dump.coins) ? dump.coins : []).slice(0, 6);
+
+          const ignite = [];
+          const fade = [];
+
+          pumpRows.forEach((row) => {
+            const analysis = analyzePump(row);
+            const enriched = { ...row, _delta24: analysis.delta24, _note: analysis.note };
+            if (analysis.lane === "ignite") ignite.push(enriched);
+            else fade.push(enriched);
+            previousBySymbol.set(row.symbol, row);
+          });
+
+          const dumps = dumpRows.map((row) => {
+            const analysis = analyzeDump(row);
+            previousBySymbol.set(row.symbol, row);
+            return { ...row, _note: analysis.note };
+          });
+
+          renderBoard(ignite.slice(0, 6), document.getElementById("igniteRows"), "ignite");
+          renderBoard(fade.slice(0, 6), document.getElementById("fadeRows"), "fade-ready");
+          renderBoard(dumps.slice(0, 6), document.getElementById("dumpRows"), "dump");
+
+          setHealth(Boolean(health));
+
+          const now = new Date();
+          const clock = now.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+          lastRefreshEl.textContent = clock;
+          heroRefreshEl.textContent = clock;
+          boardUpdatedEl.textContent = clock;
+          liveModeEl.textContent = "mexc_perp";
+
+          const total = ignite.length + fade.length + dumps.length;
+          liveTotalEl.textContent = String(total);
+          igniteCountEl.textContent = String(ignite.length);
+          fadeCountEl.textContent = String(fade.length);
+          dumpCountEl.textContent = String(dumps.length);
+          watchlistCountEl.textContent = `${total} live contracts`;
+          document.title = `TradeForge • Pump Scout v3 (${total} live)`;
+
+          const elapsed = Math.round(performance.now() - start);
+          [lastRefreshEl, heroRefreshEl, boardUpdatedEl].forEach((el) => el.title = `refresh ${elapsed} ms`);
+        }catch(err){
+          setHealth(false);
+          ["igniteRows", "fadeRows", "dumpRows"].forEach((id) => {
+            const target = document.getElementById(id);
+            if (target){
+              target.innerHTML = '<div class="board-empty">Live data is temporarily unavailable. The page stays open and will retry automatically.</div>';
+            }
+          });
+          lastRefreshEl.textContent = "retrying";
+          heroRefreshEl.textContent = "retrying";
+          boardUpdatedEl.textContent = "retrying";
+          watchlistCountEl.textContent = "standby";
+        }
+      }
+
+      function copySummary(){
+        const text = [
+          `Status: ${apiStatusEl.textContent}`,
+          `Updated: ${lastRefreshEl.textContent}`,
+          `Watchlist: ${watchlistCountEl.textContent}`,
+          `Ignite/Fade/Dump: ${igniteCountEl.textContent}/${fadeCountEl.textContent}/${dumpCountEl.textContent}`
+        ].join(" | ");
+
+        if (navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(text).then(() => toast("Сводка скопирована"), () => toast("Не удалось скопировать"));
+        } else {
+          toast("Clipboard API недоступен");
+        }
+      }
+
+      document.querySelectorAll("[data-jump]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const selector = btn.getAttribute("data-jump");
+          const target = selector ? document.querySelector(selector) : null;
+          target?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+
+      document.getElementById("copySignalBtn")?.addEventListener("click", copySummary);
+      document.getElementById("copyBoardBtn")?.addEventListener("click", copySummary);
+      document.getElementById("copyFooterBtn")?.addEventListener("click", copySummary);
+      document.getElementById("manualRefreshBtn")?.addEventListener("click", () => { toast("Обновляю board…"); refresh(); });
+      document.getElementById("explainBtn")?.addEventListener("click", () => toast("Explain mode ready"));
+
+      const revealEls = document.querySelectorAll(".reveal");
+      if ("IntersectionObserver" in window){
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) entry.target.classList.add("in");
+          });
+        }, { threshold: 0.12 });
+        revealEls.forEach((el) => io.observe(el));
+      } else {
+        revealEls.forEach((el) => el.classList.add("in"));
+      }
+
+      const navLinks = Array.from(document.querySelectorAll('.nav a'));
+      const dockButtons = Array.from(document.querySelectorAll('.dock-btn'));
+      const trackedSections = [
+        { id: '#overview', el: document.querySelector('#overview') },
+        { id: '#live-board', el: document.querySelector('#live-board') },
+        { id: '#workflow', el: document.querySelector('#workflow') },
+        { id: '#mobile', el: document.querySelector('#mobile') },
+      ].filter((x) => x.el);
+
+      const activateNav = (hash) => {
+        navLinks.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === hash));
+        dockButtons.forEach((b) => b.classList.toggle('active', b.getAttribute('data-jump') === hash));
+      };
+
+      if ('IntersectionObserver' in window){
+        const sectionObserver = new IntersectionObserver((entries) => {
+          const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          if (visible?.target?.id) activateNav(`#${visible.target.id}`);
+        }, { rootMargin: '-20% 0px -55% 0px', threshold: [0.2, 0.45, 0.7] });
+        trackedSections.forEach((section) => sectionObserver.observe(section.el));
+      }
+
+      refresh();
+      setInterval(refresh, 30000);
+    })();
+  </script>
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+      m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+      m[i].l=1*new Date();
+      for (var j = 0; j < document.scripts.length; j++) { if (document.scripts[j].src === r) { return; } }
+      k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a);
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=108276909', 'ym');
+    ym(108276909, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/108276909" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
+  <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+      var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+      s1.async=true;
+      s1.src='https://embed.tawk.to/69c6c43078f08b1c35658ae8/1jko6so4r';
+      s1.charset='UTF-8';
+      s1.setAttribute('crossorigin','*');
+      s0.parentNode.insertBefore(s1,s0);
+    })();
+  </script>
+</body>
+</html>

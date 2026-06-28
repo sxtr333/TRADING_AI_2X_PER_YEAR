@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TradeForge — Оплата принята</title>
+  <style>
+    :root{--bg:#050608;--panel:rgba(10,12,14,.9);--stroke:rgba(255,255,255,.1);--text:rgba(235,235,235,.92);--muted:rgba(235,235,235,.62);--gold:#b99b4a;--mint:#8cffdc}
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;display:grid;place-items:center;background:
+    radial-gradient(1200px 600px at 20% -20%, rgba(80,90,140,.25), transparent 60%),
+    radial-gradient(900px 500px at 80% 0%, rgba(120,90,40,.22), transparent 55%),
+    radial-gradient(800px 480px at 70% 85%, rgba(40,120,110,.14), transparent 55%),var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .card{width:min(760px,calc(100% - 28px));padding:28px;border-radius:22px;border:1px solid var(--stroke);background:var(--panel);box-shadow:0 24px 80px rgba(0,0,0,.45)}
+    h1{margin:0 0 10px;font-size:34px;letter-spacing:.04em}.ok{display:inline-flex;align-items:center;gap:10px;padding:8px 12px;border-radius:999px;border:1px solid rgba(140,255,220,.25);background:rgba(140,255,220,.08);color:rgba(220,255,245,.95);font-weight:800}
+    p{color:var(--muted);line-height:1.6}.status{margin:18px 0;padding:16px 18px;border-radius:16px;border:1px solid rgba(185,155,74,.25);background:rgba(185,155,74,.08)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text);font-weight:800}
+    .btn.primary{border-color:rgba(185,155,74,.5);background:linear-gradient(180deg, rgba(185,155,74,.18), rgba(0,0,0,.22));color:rgba(255,245,220,.96)}
+    .mini{font-size:13px;color:var(--muted)}
+    .summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}
+    .sum{padding:16px;border-radius:16px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03)}
+    .sum .k{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:8px}
+    .sum .v{font-size:18px;font-weight:900;letter-spacing:-.03em}
+    .steps{margin:18px 0 0;padding-left:18px;color:var(--muted);line-height:1.75}
+    @media (max-width: 720px){.card{padding:22px}.summary{grid-template-columns:1fr}}
+  </style>
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+      (function(m,e,t,r,i,k,a){
+          m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+          m[i].l=1*new Date();
+          for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+          k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+      })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=108276909', 'ym');
+
+      ym(108276909, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+  </script>
+  <!-- /Yandex.Metrika counter -->
+</head>
+<body>
+  <noscript><div><img src="https://mc.yandex.ru/watch/108276909" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <main class="card">
+    <div class="ok">Оплата принята</div>
+    <h1>TradeForge</h1>
+    <p>Платёж получен. Сейчас синхронизируем доступ с аккаунтом и подготавливаем твой рабочий контур: dashboard, live signals и Pump Scout.</p>
+    <section class="summary">
+      <div class="sum">
+        <div class="k">Access</div>
+        <div class="v" id="summaryAccess">Processing</div>
+      </div>
+      <div class="sum">
+        <div class="k">Plan</div>
+        <div class="v" id="summaryPlan">TradeForge</div>
+      </div>
+      <div class="sum">
+        <div class="k">Next step</div>
+        <div class="v" id="summaryNext">Open dashboard</div>
+      </div>
+    </section>
+    <div class="status" id="packageBox">
+      <strong id="packageTitle">Выбранный пакет</strong>
+      <div class="mini" id="packageText">Сейчас загрузим детали тарифа и срок доступа.</div>
+    </div>
+    <div class="status" id="statusBox">
+      <strong id="statusTitle">Проверяем подписку…</strong>
+      <div class="mini" id="statusText">Обычно это занимает несколько секунд после подтверждения оплаты.</div>
+    </div>
+    <div class="actions">
+      <a class="btn primary" href="/dashboard">Открыть Dashboard</a>
+      <a class="btn" href="/pump-scout/">Открыть Pump Scout</a>
+      <a class="btn" href="/">На главную</a>
+    </div>
+    <ol class="steps">
+      <li>Если доступ уже активирован, переходи в dashboard и проверяй сигналы.</li>
+      <li>Если платёж был в другом браузере, зайди в тот же аккаунт и обнови страницу.</li>
+      <li>Если webhook задержится, доступ подтянется автоматически без повторной оплаты.</li>
+    </ol>
+  </main>
+  <script>
+    const API_BASE = "https://api.tradeforge.art";
+    try {
+      if (typeof window.ym === "function") {
+        const paramsForGoal = new URLSearchParams(window.location.search);
+        window.ym(108276909, "reachGoal", "payment_success", {
+          plan: (paramsForGoal.get("plan") || "").toLowerCase(),
+          period: (paramsForGoal.get("period") || "").toLowerCase(),
+          amount: paramsForGoal.get("amount") || "",
+        });
+      }
+    } catch (_e) {}
+
+    const LS_AUTH = "tf_auth_v1";
+    const PERIOD_LABELS = {
+      monthly: "1 месяц",
+      quarterly: "3 месяца",
+      semiannual: "6 месяцев",
+      yearly: "12 месяцев",
+    };
+    const PLAN_LABELS = {
+      starter: "Starter",
+      pro: "Pro",
+      elite: "Elite",
+    };
+    const params = new URLSearchParams(window.location.search);
+    const titleEl = document.getElementById("statusTitle");
+    const textEl = document.getElementById("statusText");
+    const packageTitleEl = document.getElementById("packageTitle");
+    const packageTextEl = document.getElementById("packageText");
+    const summaryAccessEl = document.getElementById("summaryAccess");
+    const summaryPlanEl = document.getElementById("summaryPlan");
+    const summaryNextEl = document.getElementById("summaryNext");
+    function getAuth(){ try { return JSON.parse(localStorage.getItem(LS_AUTH) || "null"); } catch(e){ return null; } }
+    function renderInitialPackage(){
+      const plan = (params.get("plan") || "").toLowerCase();
+      const period = (params.get("period") || "").toLowerCase();
+      const amount = params.get("amount");
+      const planLabel = PLAN_LABELS[plan] || "TradeForge";
+      const periodLabel = PERIOD_LABELS[period] || "выбранный период";
+      if (summaryPlanEl) summaryPlanEl.textContent = plan ? `${planLabel} • ${periodLabel}` : "TradeForge";
+      if (summaryAccessEl) summaryAccessEl.textContent = "Pending";
+      if (summaryNextEl) summaryNextEl.textContent = "Wait for access";
+      if (plan || period || amount){
+        packageTitleEl.textContent = `${planLabel} • ${periodLabel}`;
+        packageTextEl.textContent = amount ? `Сумма оплаты: ${amount} ₽. После webhook покажем точную дату окончания доступа.` : `Период доступа: ${periodLabel}. После webhook покажем точную дату окончания.`;
+      } else {
+        packageTitleEl.textContent = "Пакет оплаты";
+        packageTextEl.textContent = "Детали тарифа загрузим после подтверждения подписки.";
+      }
+    }
+    async function apiFetch(url, opts={}){
+      const headers = Object.assign({}, opts.headers || {});
+      const token = getAuth()?.token;
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      return fetch(url, Object.assign({}, opts, { headers }));
+    }
+    async function pollStatus(attempt=0){
+      if (!getAuth()?.token && attempt === 0){
+        titleEl.textContent = "Оплата принята";
+        textEl.textContent = "Webhook активирует доступ автоматически. Если платёж был в другом браузере или устройстве, просто войди в тот же аккаунт и обнови страницу.";
+        if (summaryAccessEl) summaryAccessEl.textContent = "Waiting";
+      }
+      try{
+        const r = await apiFetch(`${API_BASE}/subscription/status`);
+        const data = await r.json().catch(()=>({}));
+        if (r.ok && data?.subscription?.active){
+          titleEl.textContent = "Подписка активирована";
+          const plan = (data.subscription.plan || "active").toLowerCase();
+          const exp = data.subscription.expires_at ? new Date(data.subscription.expires_at * 1000).toLocaleString("ru-RU") : "—";
+          const planLabel = PLAN_LABELS[plan] || plan.toUpperCase();
+          const period = (params.get("period") || "").toLowerCase();
+          const periodLabel = PERIOD_LABELS[period] || "активный период";
+          const amount = params.get("amount");
+          packageTitleEl.textContent = `${planLabel} • ${periodLabel}`;
+          packageTextEl.textContent = amount ? `Оплата подтверждена: ${amount} ₽. Срок доступа уже активен.` : `Пакет успешно активирован.`;
+          textEl.textContent = `Тариф: ${planLabel}. Период: ${periodLabel}. Доступ активен до ${exp}.`;
+          if (summaryAccessEl) summaryAccessEl.textContent = "Active";
+          if (summaryPlanEl) summaryPlanEl.textContent = `${planLabel} • ${periodLabel}`;
+          if (summaryNextEl) summaryNextEl.textContent = "Open dashboard";
+          return;
+        }
+      }catch(e){}
+      if (attempt < 14){
+        titleEl.textContent = "Ожидаем подтверждение вебхука…";
+        textEl.textContent = "Оплата уже принята, подписка будет активирована автоматически.";
+        if (summaryAccessEl) summaryAccessEl.textContent = "Syncing";
+        setTimeout(() => pollStatus(attempt + 1), 2000);
+      } else {
+        titleEl.textContent = "Оплата принята";
+        textEl.textContent = "Если подписка ещё не активировалась, обнови страницу через минуту или напиши в поддержку: support@tradeforge.art.";
+        if (summaryAccessEl) summaryAccessEl.textContent = "Needs recheck";
+        if (summaryNextEl) summaryNextEl.textContent = "Refresh page";
+      }
+    }
+    renderInitialPackage();
+    pollStatus();
+  </script>
+</body>
+</html>

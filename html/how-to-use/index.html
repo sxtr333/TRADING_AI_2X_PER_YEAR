@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TradeForge — How to use</title>
+  <meta name="description" content="TradeForge How to use — простое объяснение того, как работают BTC Engine, Market Radar, Pump Scout и как вставить NAGASAKI_V9 в TradingView." />
+  <style>
+    :root{
+      --bg: #050608;
+      --panel: rgba(10,12,14,.86);
+      --panel2: rgba(8,10,12,.78);
+      --stroke: rgba(255,255,255,.08);
+      --stroke2: rgba(255,255,255,.12);
+      --text: rgba(235,235,235,.92);
+      --muted: rgba(235,235,235,.60);
+      --gold: #b99b4a;
+      --gold2: #e1c26a;
+      --mint: #8cffdc;
+      --radius: 16px;
+      --radius2: 12px;
+      --glow: 0 0 0 1px rgba(185,155,74,.30), 0 0 18px rgba(185,155,74,.18), 0 0 44px rgba(185,155,74,.10);
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+    }
+    *{ box-sizing:border-box; }
+    html,body{
+      margin:0;
+      overflow:hidden;
+      color:var(--text);
+      font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", sans-serif;
+      background:
+        radial-gradient(1200px 600px at 20% -20%, rgba(80,90,140,.25), transparent 60%),
+        radial-gradient(900px 500px at 80% 0%, rgba(120,90,40,.22), transparent 55%),
+        radial-gradient(800px 480px at 70% 85%, rgba(40,120,110,.14), transparent 55%),
+        var(--bg);
+    }
+    a{ color:inherit; text-decoration:none; }
+    .frame{
+      width:min(1500px, calc(100% - 18px));
+      margin:12px auto;
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      height:calc(100vh - 24px);
+      display:flex;
+      flex-direction:column;
+      position:relative;
+    }
+    .frame::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:radial-gradient(900px 300px at 50% 0%, rgba(185,155,74,.12), transparent 60%);
+      pointer-events:none;
+    }
+    .topbar{
+      position:relative;
+      z-index:2;
+      display:flex;
+      align-items:center;
+      gap:18px;
+      padding:14px 18px;
+      background:rgba(0,0,0,.52);
+      border-bottom:1px solid rgba(255,255,255,.07);
+      backdrop-filter:blur(10px);
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:190px;
+    }
+    .brand svg{ width:32px; height:32px; filter:drop-shadow(0 0 16px rgba(150,255,220,.10)); }
+    .brand .name{
+      font-weight:800;
+      letter-spacing:.10em;
+      font-size:20px;
+      opacity:.95;
+      text-transform:uppercase;
+    }
+    .nav{
+      display:flex;
+      gap:26px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .nav a{
+      color:inherit;
+      padding:8px 10px;
+      border-radius:10px;
+      transition:.15s ease;
+    }
+    .nav a:hover{ color:var(--text); background:rgba(255,255,255,.04); }
+    .nav a.active{
+      color:var(--text);
+      position:relative;
+    }
+    .nav a.active::after{
+      content:"";
+      position:absolute;
+      left:10px;
+      right:10px;
+      bottom:-10px;
+      height:2px;
+      background:linear-gradient(90deg, transparent, rgba(185,155,74,.9), transparent);
+    }
+    .top-actions{
+      margin-left:auto;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .mobile-app-nav{
+      display:none;
+      position:sticky;
+      top:0;
+      z-index:49;
+      padding:8px 10px;
+      gap:8px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      background:rgba(7,8,10,.78);
+      border-bottom:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(12px);
+    }
+    .mobile-app-nav::-webkit-scrollbar{ display:none; }
+    .mobile-app-link{
+      flex:0 0 auto;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:36px;
+      padding:0 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(20,22,26,.55);
+      color:rgba(235,235,235,.86);
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.04em;
+      white-space:nowrap;
+      text-decoration:none;
+    }
+    .mobile-app-link.active{
+      border-color: rgba(185,155,74,.55);
+      background: linear-gradient(180deg, rgba(185,155,74,.18), rgba(20,22,26,.55));
+      box-shadow: 0 0 0 1px rgba(185,155,74,.25), 0 12px 40px rgba(185,155,74,.08);
+      color: var(--text);
+    }
+    .icon-btn{
+      width:34px;
+      height:34px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      display:grid;
+      place-items:center;
+      transition:.15s ease;
+    }
+    .icon-btn svg{ width:18px; height:18px; opacity:.9; }
+    .explain-pill{
+      height:34px;
+      padding:0 14px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .explain-pill .badge{
+      width:10px;
+      height:10px;
+      border-radius:3px;
+      background:linear-gradient(135deg, rgba(185,155,74,.95), rgba(140,255,220,.70));
+      box-shadow:0 0 18px rgba(185,155,74,.20);
+    }
+    .explain-pill span{ font-weight:700; letter-spacing:.06em; font-size:13px; opacity:.95; }
+
+    .content{
+      display:grid;
+      flex:1;
+      min-height:0;
+      grid-template-columns:300px 1fr;
+      background:rgba(0,0,0,.55);
+    }
+    .sidebar{
+      min-width:300px;
+      overflow:auto;
+      padding:16px 14px;
+      border-right:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.55));
+    }
+    .side-card{
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.09);
+      background:rgba(0,0,0,.40);
+      padding:12px;
+      box-shadow:0 12px 34px rgba(0,0,0,.35);
+      margin-bottom:12px;
+    }
+    .section-title{
+      font-size:12px;
+      letter-spacing:.18em;
+      color:var(--muted);
+      margin-bottom:10px;
+      text-transform:uppercase;
+    }
+    .kv{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:11px 12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.02);
+      margin-bottom:8px;
+    }
+    .kv .k{
+      color:rgba(255,255,255,.52);
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-size:10px;
+    }
+    .kv .v{
+      font-size:12px;
+      font-weight:700;
+      color:#f1f3f4;
+      text-align:right;
+    }
+    .side-copy{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+    .side-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin:0;
+      padding:0;
+      list-style:none;
+    }
+    .side-list li{
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.02);
+      font-size:12px;
+      line-height:1.55;
+      color:var(--muted);
+    }
+    .side-list b{ color:#fff; }
+    .action-btn{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:40px;
+      border-radius:10px;
+      border:1px solid rgba(185,155,74,.30);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow:var(--glow);
+      color:#f4efe0;
+      font-weight:800;
+      font-size:12px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      margin-top:10px;
+    }
+
+    .main{
+      min-width:0;
+      overflow:auto;
+      padding:16px 14px 18px;
+    }
+    .module-toolbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .module-strip{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .tab-chip,
+    .live-pill{
+      min-height:28px;
+      padding:0 12px;
+      border-radius:9px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.02);
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:.08em;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      text-transform:uppercase;
+    }
+    .tab-chip{ color:rgba(255,255,255,.68); }
+    .tab-chip.active{
+      color:#f4efe0;
+      border-color:rgba(185,155,74,.24);
+      box-shadow:var(--glow);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    }
+    .live-pill{
+      color:#f0f2f3;
+      gap:8px;
+    }
+    .live-pill::before{
+      content:"";
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      background:#83ffd8;
+      box-shadow:0 0 14px rgba(131,255,216,.4);
+    }
+    .hero,
+    .panel{
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(0,0,0,.34);
+    }
+    .hero{
+      padding:14px 16px;
+      margin-bottom:12px;
+    }
+    .kicker,
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      min-height:24px;
+      padding:0 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.07);
+      background:rgba(255,255,255,.03);
+      color:rgba(255,255,255,.55);
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+    }
+    .hero h1{
+      margin:12px 0 8px;
+      max-width:880px;
+      font-size:clamp(24px, 3vw, 42px);
+      line-height:.98;
+      letter-spacing:-.05em;
+    }
+    .hero p,
+    .panel p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.65;
+      font-size:13px;
+    }
+    .summary-grid,
+    .section-grid,
+    .triple-grid{
+      display:grid;
+      gap:12px;
+      margin-top:12px;
+    }
+    .summary-grid,
+    .section-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+    .triple-grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); }
+    .summary-card,
+    .panel{
+      padding:14px;
+    }
+    .summary-card h3,
+    .panel h3{
+      margin:8px 0 6px;
+      font-size:16px;
+      letter-spacing:-.03em;
+    }
+    .list{
+      margin:10px 0 0;
+      padding:0;
+      list-style:none;
+      display:grid;
+      gap:8px;
+    }
+    .list li{
+      position:relative;
+      padding-left:14px;
+      color:#f2f4f5;
+      font-size:12px;
+      line-height:1.65;
+    }
+    .list li::before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:.72em;
+      width:6px;
+      height:6px;
+      border-radius:50%;
+      background:linear-gradient(180deg, var(--gold2), var(--mint));
+      box-shadow:0 0 14px rgba(185,155,74,.20);
+    }
+    .steps{
+      display:grid;
+      gap:10px;
+      margin-top:12px;
+    }
+    .step{
+      padding:11px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.02);
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.7;
+    }
+    .step b{ color:#fff; }
+    .toolbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin:12px 0 10px;
+    }
+    .code-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+    .btn{
+      height:38px;
+      padding:0 14px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      color:#fff;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:12px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .btn.primary{
+      border-color:rgba(185,155,74,.30);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow:var(--glow);
+      color:#f4efe0;
+    }
+    .copy-status{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .code-box{
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      overflow:hidden;
+      background:#080a0d;
+    }
+    textarea{
+      width:100%;
+      min-height:420px;
+      resize:vertical;
+      border:0;
+      outline:0;
+      padding:16px;
+      background:transparent;
+      color:#d7f7ec;
+      font:12px/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      tab-size:2;
+    }
+    .footer-note{
+      margin-top:12px;
+      color:rgba(255,255,255,.45);
+      font-size:12px;
+      line-height:1.7;
+    }
+    @media (max-width:1180px){
+      .content{ grid-template-columns:1fr; }
+      .sidebar{
+        border-right:0;
+        border-bottom:1px solid rgba(255,255,255,.06);
+      }
+      .summary-grid,
+      .section-grid,
+      .triple-grid{ grid-template-columns:1fr; }
+    }
+    @media (max-width:760px){
+      .frame{
+        width:100%;
+        margin:0;
+        min-height:100svh;
+        border-radius:0;
+      }
+      .topbar{
+        padding:10px 12px;
+        flex-wrap:wrap;
+        gap:10px;
+      }
+      .brand{ min-width:auto; }
+      .nav{ display:none; }
+      .mobile-app-nav{ display:flex !important; }
+      .top-actions{
+        width:100%;
+        margin-left:0;
+        display:grid;
+        grid-template-columns:40px 40px minmax(0, 1fr);
+        gap:10px;
+      }
+      .top-actions .explain-pill{ width:100%; justify-content:center; min-width:0; }
+      .main,
+      .sidebar{ padding:12px; }
+      .hero h1{ font-size:30px; }
+      textarea{ min-height:360px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <div class="topbar">
+      <div class="brand">
+        <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <path d="M14 50c6-17 12-28 18-34 8 7 14 19 18 34" stroke="rgba(140,255,220,.75)" stroke-width="3" stroke-linecap="round"/>
+          <path d="M18 50h28" stroke="rgba(185,155,74,.9)" stroke-width="3" stroke-linecap="round"/>
+          <path d="M26 30c2 2 6 2 8 0 3-3 7-3 10 0" stroke="rgba(235,235,235,.35)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <div class="name">TradeForge</div>
+      </div>
+
+      <nav class="nav">
+        <a href="/dashboard/">BTC Engine</a>
+        <a href="/screener/">Market Radar</a>
+        <a href="/pump-scout/">Pump Scout</a>
+        <a href="/how-to-use/#reports">Reports</a>
+        <a class="active" href="/how-to-use/">How to use</a>
+        <a href="#">Settings</a>
+      </nav>
+
+      <div class="top-actions">
+        <button class="icon-btn" type="button" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2"/><path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button class="icon-btn" type="button" aria-label="User">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="2"/><path d="M4 20a8 8 0 1 1 16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <div class="explain-pill"><span class="badge"></span><span>Explain</span></div>
+      </div>
+    </div>
+
+    <nav class="mobile-app-nav" aria-label="Навигация по модулям">
+      <a class="mobile-app-link" href="/dashboard/">BTC Engine</a>
+      <a class="mobile-app-link" href="/screener/">Market Radar</a>
+      <a class="mobile-app-link" href="/pump-scout/">Pump Scout</a>
+      <a class="mobile-app-link" href="/how-to-use/#reports">Reports</a>
+      <a class="mobile-app-link active" href="/how-to-use/">How to use</a>
+      <a class="mobile-app-link" href="/settings/">Settings</a>
+    </nav>
+
+    <div class="content">
+      <aside class="sidebar">
+        <div class="side-card">
+          <div class="section-title">Module status</div>
+          <div class="kv"><span class="k">Page</span><span class="v">How to use</span></div>
+          <div class="kv"><span class="k">Scope</span><span class="v">Platform logic</span></div>
+          <div class="kv"><span class="k">TradingView</span><span class="v">NAGASAKI_V9 ready</span></div>
+          <p class="side-copy">Этот модуль нужен не для маркетинга, а чтобы быстро понять архитектуру сервиса и забрать готовый `pine`-код без копания по чату и старым сообщениям.</p>
+          <a class="action-btn" href="#pine">Open Pine guide</a>
+        </div>
+
+        <div class="side-card">
+          <div class="section-title">Quick map</div>
+          <ul class="side-list">
+            <li><b>BTC Engine</b><br>Ядро решений по битку: структура, сигнал, риск, invalidation.</li>
+            <li><b>Market Radar</b><br>Слой общего рыночного контекста, силы и слабости.</li>
+            <li><b>Pump Scout</b><br>Боевой MEXC-модуль под violent move и fade-read.</li>
+            <li><b>TradingView</b><br>Raw `.pine`, который можно вставить и сохранить как свой индикатор.</li>
+          </ul>
+        </div>
+
+        <div class="side-card">
+          <div class="section-title">Why BTC first</div>
+          <p class="side-copy">BTC выбран как базовый рыночный якорь. Он задаёт режим риска, а уже внутри него альты либо получают импульс, либо рассыпаются сильнее самого битка.</p>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="module-toolbar">
+          <div class="module-strip">
+            <div class="tab-chip active">Platform overview</div>
+            <div class="tab-chip">BTC core</div>
+            <div class="tab-chip">Alt relation</div>
+            <div class="tab-chip">TradingView</div>
+          </div>
+          <div class="live-pill">Live docs</div>
+        </div>
+
+        <section class="hero">
+          <div class="kicker">How to use</div>
+          <h1>Простое объяснение того, как работает весь сервис, но в том же боевом shell, а не как отдельная документация.</h1>
+          <p>Здесь собрана короткая рабочая версия: зачем существует каждый модуль, почему ядро построено вокруг BTC, как это связано с альтами и как вставить наш `NAGASAKI_V9` в TradingView так, чтобы код было удобно забрать и использовать как свой.</p>
+
+          <div class="summary-grid">
+            <div class="summary-card panel">
+              <div class="tag">BTC Engine</div>
+              <h3>Decision screen по битку</h3>
+              <p>Живой график, режим `LONG / SHORT / FLAT`, confidence и stop-логика в одном рабочем окне.</p>
+            </div>
+            <div class="summary-card panel">
+              <div class="tag">Market Radar</div>
+              <h3>Карта силы и слабости</h3>
+              <p>Показывает не один тикер, а общий рыночный фон: где начинается сила, где рынок захлёбывается и где есть смысл смотреть дальше.</p>
+            </div>
+            <div class="summary-card panel">
+              <div class="tag">Pump Scout</div>
+              <h3>Боевой альт-радар</h3>
+              <p>Фильтрует violent move на `MEXC perpetual`, чтобы отделять живой импульс от растянутого пампа и exhaustion.</p>
+            </div>
+            <div class="summary-card panel">
+              <div class="tag">TradingView</div>
+              <h3>Готовый pine-контур</h3>
+              <p>Код `NAGASAKI_V9` лежит raw-файлом и копируется одним нажатием без обрезаний и ручной сборки по кускам.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" style="margin-bottom:12px">
+          <div class="section-title">Как работает каждый модуль</div>
+          <div class="section-grid">
+            <div class="panel">
+              <h3>BTC Engine</h3>
+              <p>Это главный экран по битку. Его задача не угадать одну свечу, а собрать структуру рынка, режим сигнала и риск в одно решение.</p>
+              <ul class="list">
+                <li>Показывает живой график BTCUSDT и текущий режим: `LONG`, `SHORT` или `FLAT`.</li>
+                <li>Даёт `confidence`, чтобы ты видел не только направление, но и силу идеи.</li>
+                <li>Считает invalidation и stop, чтобы вход не был “на глаз”.</li>
+                <li>Раскрывает причину решения: agreement, volatility regime, trap risk и другие фильтры.</li>
+              </ul>
+            </div>
+
+            <div class="panel">
+              <h3>Market Radar</h3>
+              <p>Это карта рынка, а не одна сделка. Он нужен, чтобы понять, где реально есть сила, а где рынок уже начинает уставать.</p>
+              <ul class="list">
+                <li>Показывает, какие монеты и сектора сейчас живее остальных.</li>
+                <li>Даёт общий контекст: risk-on, risk-off, перегрев, локальная слабость.</li>
+                <li>Помогает быстро увидеть альты, которые идут синхронно с BTC, и те, что живут своей жизнью.</li>
+                <li>Это модуль “читать рынок”, а не “тыкать buy одной кнопкой”.</li>
+              </ul>
+            </div>
+
+            <div class="panel">
+              <h3>Pump Scout</h3>
+              <p>Это боевой радар по `MEXC perpetual`. Он ищет не просто рост, а резкие импульсы с признаками stretch, exhaustion, fade-ready и downside pressure.</p>
+              <ul class="list">
+                <li>Сканирует perp-поток и собирает shortlist по violent move.</li>
+                <li>Разбивает картину на зоны `Ignite`, `Fade-ready`, `Dump-watch`.</li>
+                <li>Помогает быстро понять: импульс ещё жив или это уже перегретый вынос.</li>
+                <li>Работает как продолжение общей логики платформы, а не как отдельная игрушка.</li>
+              </ul>
+            </div>
+
+            <div class="panel">
+              <h3>API и серверный контур</h3>
+              <p>Сайт не “магический”. Есть backend, который собирает данные, считает bootstrap и отдаёт график, snapshots и модельные состояния.</p>
+              <ul class="list">
+                <li>Фронт рисует интерфейс и запрашивает данные у API.</li>
+                <li>Тяжёлая логика живёт на сервере, а не в браузере.</li>
+                <li>Быстрый старт страницы даёт bootstrap и кэш, а не случайная удача.</li>
+                <li>То есть перед тобой не просто HTML, а рабочий контур поверх сервера и рыночных данных.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" style="margin-bottom:12px">
+          <div class="section-title">BTC и общий рынок</div>
+          <div class="triple-grid">
+            <div class="panel">
+              <div class="tag">Почему BTC</div>
+              <h3>BTC задаёт ритм</h3>
+              <p>Когда биток держит режим ровно, альты чаще получают нормальный risk appetite. Когда биток ломается, альты обычно страдают сильнее.</p>
+            </div>
+            <div class="panel">
+              <div class="tag">Корреляция</div>
+              <h3>Альты не одинаковые, фон общий</h3>
+              <p>Корреляция не означает, что всё движется один в один. Она означает, что BTC задаёт фон, внутри которого альты уже играют свою амплитуду.</p>
+            </div>
+            <div class="panel">
+              <div class="tag">Практика</div>
+              <h3>Зачем это нужно на входе</h3>
+              <p>Даже красивая альта легко ломается, если общий режим BTC идёт против неё. Поэтому ядро сервиса начинается именно с битка.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="reports" style="margin-bottom:12px">
+          <div class="section-title">Reports</div>
+          <div class="section-grid">
+            <div class="panel">
+              <h3>Backtest / model update</h3>
+              <p>Слой, где ты смотришь, как модель вела себя на истории: где она работает уверенно, а где режим становится для неё токсичным.</p>
+            </div>
+            <div class="panel">
+              <h3>Live behavior</h3>
+              <p>Слой, где обещание модели сравнивается с реальным поведением рынка: hit-rate, просадка, поздние входы и устойчивость на живом потоке.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="pine">
+          <div class="section-title">Pump Scout / TradingView</div>
+          <h3 style="font-size:24px;margin:0 0 8px">Как вставить фирменный код на альту в TradingView</h3>
+          <p>Ниже лежит полный код `NAGASAKI_V9`. Его можно скопировать как есть, вставить в `Pine Editor`, сохранить как свой индикатор и использовать на любой альте или perp-паре.</p>
+
+          <div class="steps">
+            <div class="step"><b>1.</b> Открой `TradingView` и зайди в `Pine Editor`.</div>
+            <div class="step"><b>2.</b> Удали старый текст редактора и вставь код ниже.</div>
+            <div class="step"><b>3.</b> Нажми `Save`, задай своё имя индикатора и затем `Add to chart`.</div>
+            <div class="step"><b>4.</b> Открой нужную альту, выбери таймфрейм и уже там крути `Mode / TF / ATR / filters` под свой стиль.</div>
+            <div class="step"><b>5.</b> Если хочешь сделать индикатор совсем “своим”, просто поменяй строку `indicator("NAGASAKI_V9", ...)` на своё имя.</div>
+          </div>
+
+          <div class="toolbar">
+            <div class="copy-status" id="copyStatus">Код подгружается из локального `.pine` файла, чтобы его можно было скопировать целиком без обрезаний.</div>
+            <div class="code-actions">
+              <a class="btn" href="/how-to-use/nagasaki-v9.pine" target="_blank" rel="noopener">Open raw .pine</a>
+              <button class="btn primary" id="copyCodeBtn" type="button">Скопировать код</button>
+            </div>
+          </div>
+
+          <div class="code-box">
+            <textarea id="pineCode" spellcheck="false" readonly>Loading NAGASAKI_V9…</textarea>
+          </div>
+          <div class="footer-note">Если индикатор не добавился, обычно проблема одна из трёх: `Pine Editor` не сохранил код, открыт не тот тикер или в коде осталась незавершённая ручная правка. В нормальном сценарии raw-файл ниже должен вставляться одним куском.</div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (async function initHowToUsePage(){
+      const textarea = document.getElementById('pineCode');
+      const copyBtn = document.getElementById('copyCodeBtn');
+      const copyStatus = document.getElementById('copyStatus');
+      try{
+        const resp = await fetch('/how-to-use/nagasaki-v9.pine', { cache: 'no-store' });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const code = await resp.text();
+        textarea.value = code;
+        copyStatus.textContent = 'Код готов. Можно копировать целиком и вставлять в Pine Editor как свой индикатор.';
+      }catch(err){
+        textarea.value = 'Не удалось загрузить .pine файл автоматически. Открой кнопку Open raw .pine и скопируй код оттуда.';
+        copyStatus.textContent = 'Автозагрузка .pine не удалась. Используй Open raw .pine.';
+      }
+      copyBtn.addEventListener('click', async () => {
+        try{
+          await navigator.clipboard.writeText(textarea.value);
+          copyStatus.textContent = 'Код скопирован. Теперь открывай Pine Editor, вставляй и сохраняй индикатор.';
+        }catch(err){
+          textarea.focus();
+          textarea.select();
+          copyStatus.textContent = 'Не удалось скопировать автоматически. Текст выделен вручную, жми Ctrl+C.';
+        }
+      });
+    })();
+  </script>
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+      m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+      m[i].l=1*new Date();
+      for (var j = 0; j < document.scripts.length; j++) { if (document.scripts[j].src === r) { return; } }
+      k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a);
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=108276909', 'ym');
+    ym(108276909, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/108276909" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
+  <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+      var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+      s1.async=true;
+      s1.src='https://embed.tawk.to/69c6c43078f08b1c35658ae8/1jko6so4r';
+      s1.charset='UTF-8';
+      s1.setAttribute('crossorigin','*');
+      s0.parentNode.insertBefore(s1,s0);
+    })();
+  </script>
+</body>
+</html>

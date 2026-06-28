@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>TradeForge • Settings</title>
+  <meta name="description" content="TradeForge Settings — системные настройки, доступ, профиль и рабочие параметры платформы." />
+  <style>
+    :root{
+      --bg:#050608;
+      --panel:rgba(10,12,14,.88);
+      --panel-2:rgba(8,10,12,.78);
+      --stroke:rgba(255,255,255,.08);
+      --stroke-2:rgba(255,255,255,.13);
+      --text:rgba(239,242,246,.95);
+      --muted:rgba(239,242,246,.62);
+      --muted-2:rgba(239,242,246,.44);
+      --gold:#b99b4a;
+      --gold-2:#e1c26a;
+      --mint:#8cffdc;
+      --red:#ff7a7a;
+      --radius-xl:18px;
+      --radius-lg:16px;
+      --radius-md:12px;
+      --shadow:0 28px 90px rgba(0,0,0,.56);
+      --glow:0 0 0 1px rgba(185,155,74,.24), 0 0 22px rgba(185,155,74,.12);
+      --shell-max:1500px;
+      --topbar-h:64px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%}
+    body{
+      color:var(--text);
+      font-family:ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 640px at 18% -16%, rgba(87,97,155,.26), transparent 62%),
+        radial-gradient(1000px 540px at 82% 2%, rgba(185,155,74,.18), transparent 56%),
+        radial-gradient(900px 520px at 70% 95%, rgba(36,132,114,.16), transparent 60%),
+        linear-gradient(180deg, #040506, #06080a 36%, #050608 100%);
+      overflow:hidden;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(transparent 0, transparent 23px, rgba(255,255,255,.025) 24px),
+        linear-gradient(90deg, transparent 0, transparent 23px, rgba(255,255,255,.025) 24px);
+      background-size:24px 24px;
+      mask-image:radial-gradient(1200px 740px at 50% 10%, rgba(0,0,0,.85), rgba(0,0,0,.22) 66%, transparent 88%);
+      opacity:.36;
+      z-index:0;
+    }
+    a{color:inherit;text-decoration:none}
+    button{font:inherit}
+    .shell{
+      position:relative;
+      z-index:1;
+      width:min(var(--shell-max), calc(100% - 18px));
+      margin:12px auto;
+      border:1px solid var(--stroke);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.012));
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      min-height:calc(100svh - 24px);
+    }
+    .shell::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      pointer-events:none;
+      background:
+        radial-gradient(900px 340px at 22% 0%, rgba(140,255,220,.08), transparent 60%),
+        radial-gradient(900px 340px at 78% 0%, rgba(185,155,74,.12), transparent 58%);
+      z-index:0;
+    }
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      display:flex;
+      align-items:center;
+      gap:18px;
+      min-height:var(--topbar-h);
+      padding:14px 18px;
+      background:rgba(0,0,0,.52);
+      backdrop-filter:blur(10px);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+    .brand svg{width:32px;height:32px;flex:0 0 auto;filter:drop-shadow(0 0 16px rgba(140,255,220,.10))}
+    .brand-copy{min-width:0}
+    .brand-name{
+      font-weight:800;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      font-size:20px;
+      line-height:1;
+      white-space:nowrap;
+    }
+    .brand-sub{
+      margin-top:4px;
+      font-size:9px;
+      letter-spacing:.18em;
+      color:var(--muted);
+      text-transform:uppercase;
+    }
+    .nav{
+      display:flex;
+      flex-wrap:wrap;
+      gap:26px;
+      color:var(--muted);
+      font-size:14px;
+      margin-left:0;
+    }
+    .nav a{
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid transparent;
+      white-space:nowrap;
+      transition:.18s ease;
+    }
+    .nav a:hover,
+    .nav a.active{
+      color:var(--text);
+      background:rgba(255,255,255,.04);
+      position:relative;
+    }
+    .nav a.active::after{
+      content:"";
+      position:absolute;
+      left:10px;
+      right:10px;
+      bottom:-10px;
+      height:2px;
+      background:linear-gradient(90deg, transparent, rgba(185,155,74,.9), transparent);
+    }
+    .top-actions{
+      margin-left:auto;
+      display:flex;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      gap:12px;
+    }
+    .mobile-app-nav{
+      display:none;
+      position:sticky;
+      top:0;
+      z-index:49;
+      padding:8px 10px;
+      gap:8px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      background:rgba(7,8,10,.78);
+      border-bottom:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(12px);
+    }
+    .mobile-app-nav::-webkit-scrollbar{ display:none; }
+    .mobile-app-link{
+      flex:0 0 auto;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:36px;
+      padding:0 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(20,22,26,.55);
+      color:rgba(235,235,235,.86);
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.04em;
+      white-space:nowrap;
+      text-decoration:none;
+    }
+    .mobile-app-link.active{
+      border-color: rgba(185,155,74,.55);
+      background: linear-gradient(180deg, rgba(185,155,74,.18), rgba(20,22,26,.55));
+      box-shadow: 0 0 0 1px rgba(185,155,74,.25), 0 12px 40px rgba(185,155,74,.08);
+      color: var(--text);
+    }
+    .icon-btn,
+    .live-pill{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      color:var(--text);
+      border-radius:10px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .icon-btn{
+      width:34px;
+      height:34px;
+      padding:0;
+    }
+    .icon-btn svg{width:18px;height:18px}
+    .live-pill{
+      height:34px;
+      padding:0 14px;
+      border-radius:12px;
+      gap:8px;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.08em;
+    }
+    .live-pill::before{
+      content:"";
+      width:9px;height:9px;border-radius:999px;
+      background:var(--mint);
+      box-shadow:0 0 16px rgba(140,255,220,.34);
+    }
+    .layout{
+      position:relative;
+      z-index:1;
+      display:grid;
+      grid-template-columns:300px minmax(0, 1fr);
+      min-height:calc(100svh - var(--topbar-h) - 24px);
+    }
+    .sidebar{
+      padding:16px 14px;
+      border-right:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.54));
+      overflow:auto;
+    }
+    .sidebar-inner{
+      position:sticky;
+      top:calc(var(--topbar-h) + 16px);
+      display:grid;
+      gap:12px;
+    }
+    .main{
+      padding:16px;
+      display:grid;
+      gap:12px;
+      align-content:start;
+      overflow:auto;
+    }
+    .panel,
+    .hero,
+    .card{
+      position:relative;
+      overflow:hidden;
+      border-radius:var(--radius-lg);
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg, rgba(255,255,255,.032), rgba(0,0,0,.32));
+      box-shadow:0 16px 60px rgba(0,0,0,.34);
+    }
+    .panel::before,
+    .hero::before,
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:linear-gradient(180deg, rgba(255,255,255,.035), transparent 28%);
+      opacity:.55;
+    }
+    .side-panel{
+      padding:14px 12px;
+    }
+    .meta-title{
+      margin:0 0 10px;
+      color:var(--muted);
+      font-size:10px;
+      font-weight:800;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+    }
+    .meta-grid{
+      display:grid;
+      gap:8px;
+    }
+    .meta-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      min-height:42px;
+      padding:0 12px;
+      border-radius:10px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:12px;
+    }
+    .meta-item span:first-child{
+      color:var(--muted-2);
+      text-transform:uppercase;
+      letter-spacing:.10em;
+      font-size:10px;
+    }
+    .meta-item strong{
+      color:#f2f4f6;
+      font-size:12px;
+      text-align:right;
+    }
+    .side-copy{
+      margin:10px 0 0;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.65;
+    }
+    .side-list{
+      display:grid;
+      gap:8px;
+      margin:0;
+      padding:0;
+      list-style:none;
+    }
+    .side-list li{
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.025);
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.55;
+    }
+    .side-list b{color:#fff}
+    .hero{
+      padding:16px;
+      display:grid;
+      gap:12px;
+    }
+    .hero-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .hero-tags{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .tag{
+      min-height:26px;
+      padding:0 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.035);
+      color:var(--muted);
+      font-size:10px;
+      font-weight:800;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .tag .dot{
+      width:8px;height:8px;border-radius:999px;background:var(--mint);
+      box-shadow:0 0 12px rgba(140,255,220,.32);
+    }
+    .hero h1{
+      margin:0;
+      max-width:900px;
+      font-size:clamp(26px, 3.2vw, 44px);
+      line-height:.94;
+      letter-spacing:-.05em;
+    }
+    .hero p{
+      margin:0;
+      max-width:960px;
+      color:var(--muted);
+      line-height:1.65;
+      font-size:13px;
+    }
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:12px;
+    }
+    .hero-cta{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:4px;
+    }
+    .ghost-btn,
+    .solid-btn{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      color:var(--text);
+      border-radius:10px;
+      min-height:38px;
+      padding:0 14px;
+      font-weight:700;
+      font-size:12px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      cursor:pointer;
+    }
+    .solid-btn{
+      border-color:rgba(185,155,74,.42);
+      background:linear-gradient(180deg, rgba(185,155,74,.22), rgba(0,0,0,.22));
+      box-shadow:var(--glow);
+      color:rgba(255,248,228,.96);
+    }
+    .hero-side{
+      display:grid;
+      gap:10px;
+    }
+    .stat-card{
+      padding:14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.025);
+    }
+    .stat-card .k{
+      margin-bottom:8px;
+      color:var(--muted-2);
+      font-size:10px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      font-weight:800;
+    }
+    .stat-card .v{
+      color:#fff;
+      font-size:13px;
+      line-height:1.55;
+    }
+    .section-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:12px;
+    }
+    .card{
+      padding:16px;
+    }
+    .card h3{
+      margin:0 0 8px;
+      font-size:17px;
+      letter-spacing:-.03em;
+    }
+    .card p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.65;
+      font-size:13px;
+    }
+    .list{
+      display:grid;
+      gap:8px;
+      margin:10px 0 0;
+      padding:0;
+      list-style:none;
+    }
+    .list li{
+      color:#f4f6f7;
+      font-size:12px;
+      line-height:1.65;
+      padding-left:14px;
+      position:relative;
+    }
+    .list li::before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:.7em;
+      width:6px;height:6px;border-radius:999px;
+      background:linear-gradient(180deg, var(--gold-2), var(--mint));
+      box-shadow:0 0 12px rgba(185,155,74,.22);
+    }
+    @media (max-width:1180px){
+      .layout{grid-template-columns:1fr}
+      .sidebar{border-right:0;border-bottom:1px solid rgba(255,255,255,.06)}
+      .sidebar-inner{position:static}
+      .hero-grid,
+      .section-grid{grid-template-columns:1fr}
+    }
+    @media (max-width:760px){
+      .shell{width:100%;margin:0;min-height:100svh;border-radius:0}
+      .topbar{padding:10px 12px;flex-wrap:wrap;gap:10px}
+      .nav{display:none}
+      .mobile-app-nav{display:flex !important}
+      .top-actions{
+        width:100%;
+        margin-left:0;
+        display:grid;
+        grid-template-columns:40px minmax(0, 1fr);
+        gap:10px;
+      }
+      .top-actions .live-pill{width:100%;min-width:0;justify-content:center}
+      .main,.sidebar{padding:12px}
+      .hero h1{font-size:32px}
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <div class="brand">
+        <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <path d="M14 50c6-17 12-28 18-34 8 7 14 19 18 34" stroke="rgba(140,255,220,.75)" stroke-width="3" stroke-linecap="round"/>
+          <path d="M18 50h28" stroke="rgba(185,155,74,.9)" stroke-width="3" stroke-linecap="round"/>
+          <path d="M26 30c2 2 6 2 8 0 3-3 7-3 10 0" stroke="rgba(235,235,235,.35)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <div class="brand-copy">
+          <div class="brand-name">TradeForge</div>
+          <div class="brand-sub">System layer</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a href="/dashboard/">BTC Engine</a>
+        <a href="/screener/">Market Radar</a>
+        <a href="/pump-scout/">Pump Scout</a>
+        <a href="/how-to-use/#reports">Reports</a>
+        <a href="/how-to-use/">How to use</a>
+        <a class="active" href="/settings/">Settings</a>
+      </nav>
+
+      <div class="top-actions">
+        <button class="icon-btn" type="button" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2"/><path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button class="icon-btn" type="button" aria-label="User">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="2"/><path d="M4 20a8 8 0 1 1 16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <div class="live-pill">Live settings</div>
+      </div>
+    </div>
+
+    <nav class="mobile-app-nav" aria-label="Навигация по модулям">
+      <a class="mobile-app-link" href="/dashboard/">BTC Engine</a>
+      <a class="mobile-app-link" href="/screener/">Market Radar</a>
+      <a class="mobile-app-link" href="/pump-scout/">Pump Scout</a>
+      <a class="mobile-app-link" href="/how-to-use/#reports">Reports</a>
+      <a class="mobile-app-link" href="/how-to-use/">How to use</a>
+      <a class="mobile-app-link active" href="/settings/">Settings</a>
+    </nav>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="sidebar-inner">
+          <div class="panel side-panel">
+            <div class="meta-title">Module status</div>
+            <div class="meta-grid">
+              <div class="meta-item"><span>Page</span><strong>Settings</strong></div>
+              <div class="meta-item"><span>Scope</span><strong>System control</strong></div>
+              <div class="meta-item"><span>Session</span><strong>Owner / web</strong></div>
+              <div class="meta-item"><span>Status</span><strong>Operational</strong></div>
+            </div>
+            <p class="side-copy">Этот модуль больше не притворяется документацией. Здесь собраны системные слои платформы: доступ, интерфейс, billing и рабочие контуры.</p>
+          </div>
+
+          <div class="panel side-panel">
+            <div class="meta-title">Sections</div>
+            <ul class="side-list">
+              <li><b>Access</b><br>Логин, owner-flow и доступ к закрытым модулям.</li>
+              <li><b>Workspace</b><br>Что отвечает за shell, плотность интерфейса и общую визуальную систему.</li>
+              <li><b>Billing</b><br>Контур оплаты и подписки без деталей провайдера на полстраницы.</li>
+              <li><b>Infra</b><br>Домен, CDN, API и серверная база, на которой всё держится.</li>
+            </ul>
+          </div>
+
+          <div class="panel side-panel">
+            <div class="meta-title">Intent</div>
+            <p class="side-copy">Settings должен ощущаться таким же модулем продукта, как `BTC Engine` или `Pump Scout`, а не отдельной “большой страницей” с другим масштабом и ритмом.</p>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section class="hero">
+          <div class="hero-head">
+            <div class="hero-tags">
+              <div class="tag"><span class="dot"></span> system module</div>
+              <div class="tag">platform access</div>
+              <div class="tag">workspace shell</div>
+            </div>
+          </div>
+
+          <div class="hero-grid">
+            <div>
+              <h1>Settings теперь живёт в том же масштабе и shell, что и остальные модули платформы.</h1>
+              <p>Здесь не документация и не отдельный лендинг. Это системный слой `TradeForge`: доступ, интерфейс, платёжный контур и инфраструктурная база, на которой держатся остальные рабочие экраны.</p>
+              <div class="hero-cta">
+                <a class="solid-btn" href="/dashboard/">Open dashboard</a>
+                <a class="ghost-btn" href="/how-to-use/">Open how to use</a>
+              </div>
+            </div>
+
+            <div class="hero-side">
+              <div class="stat-card">
+                <div class="k">Access</div>
+                <div class="v">Owner-login, web-session и protected routes собраны в один поток.</div>
+              </div>
+              <div class="stat-card">
+                <div class="k">Workspace</div>
+                <div class="v">Единый shell, одинаковая плотность интерфейса и общий terminal-style ритм.</div>
+              </div>
+              <div class="stat-card">
+                <div class="k">Infra</div>
+                <div class="v">CDN на `www`, origin/API на сервере, редиректы и доменный контур под контролем.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-grid">
+          <div class="card">
+            <h3>Access layer</h3>
+            <p>Этот слой отвечает за то, как пользователь попадает внутрь продукта и как защищённые модули открываются без бардака.</p>
+            <ul class="list">
+              <li>Единый owner / user login-flow без раздвоенного окна входа.</li>
+              <li>Protected routes для `dashboard`, `screener` и `pump-scout`.</li>
+              <li>Web-session и куки на боевом домене, а не локальные хаки по месту.</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h3>Workspace shell</h3>
+            <p>Этот слой отвечает за одинаковое визуальное поведение модулей: шапку, сетку, плотность, отступы и terminal-style язык интерфейса.</p>
+            <ul class="list">
+              <li>Один frame и один topbar для всех ключевых страниц.</li>
+              <li>Одинаковая ширина рабочего контейнера и плотность контента.</li>
+              <li>Модули отличаются содержанием, а не тем, что выглядят как разные сайты.</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h3>Billing layer</h3>
+            <p>Платёжный контур живёт отдельно от визуальных модулей, но именно он закрывает доступ, активации и owner-права.</p>
+            <ul class="list">
+              <li>Платёжная страница и webhook уже вынесены в рабочий боевой контур.</li>
+              <li>Тариф и доступ не должны мешать самому рабочему интерфейсу.</li>
+              <li>Owner-доступ существует отдельно и не требует “оплачивать самого себя”.</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h3>Infra layer</h3>
+            <p>Здесь находится техническая база: домены, CDN, origin, API и всё, из-за чего сайт либо работает как часы, либо ведёт себя как мусор.</p>
+            <ul class="list">
+              <li>Фронт теперь идёт через `www` и CDN-контур.</li>
+              <li>Origin и API живут отдельно на сервере.</li>
+              <li>Стабильность сайта больше не зависит от старого внешнего прокси-контра.</li>
+            </ul>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+      m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+      m[i].l=1*new Date();
+      for (var j = 0; j < document.scripts.length; j++) { if (document.scripts[j].src === r) { return; } }
+      k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a);
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=108276909', 'ym');
+    ym(108276909, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/108276909" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
+  <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+      var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+      s1.async=true;
+      s1.src='https://embed.tawk.to/69c6c43078f08b1c35658ae8/1jko6so4r';
+      s1.charset='UTF-8';
+      s1.setAttribute('crossorigin','*');
+      s0.parentNode.insertBefore(s1,s0);
+    })();
+  </script>
+</body>
+</html>

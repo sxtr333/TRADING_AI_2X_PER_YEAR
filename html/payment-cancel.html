@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TradeForge — Оплата отменена</title>
+  <style>
+    :root{--bg:#050608;--panel:rgba(10,12,14,.9);--stroke:rgba(255,255,255,.1);--text:rgba(235,235,235,.92);--muted:rgba(235,235,235,.62);--gold:#b99b4a}
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;display:grid;place-items:center;background:
+    radial-gradient(1200px 600px at 20% -20%, rgba(80,90,140,.25), transparent 60%),
+    radial-gradient(900px 500px at 80% 0%, rgba(120,90,40,.22), transparent 55%),
+    radial-gradient(800px 480px at 70% 85%, rgba(40,120,110,.14), transparent 55%),var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .card{width:min(640px,calc(100% - 28px));padding:28px;border-radius:22px;border:1px solid var(--stroke);background:var(--panel);box-shadow:0 24px 80px rgba(0,0,0,.45)}
+    h1{margin:0 0 10px;font-size:34px;letter-spacing:.04em} p{color:var(--muted);line-height:1.6}.status{margin:18px 0;padding:16px 18px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text);font-weight:800}
+    .btn.primary{border-color:rgba(185,155,74,.5);background:linear-gradient(180deg, rgba(185,155,74,.18), rgba(0,0,0,.22));color:rgba(255,245,220,.96)}
+  </style>
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+      (function(m,e,t,r,i,k,a){
+          m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+          m[i].l=1*new Date();
+          for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+          k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+      })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=108276909', 'ym');
+
+      ym(108276909, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+  </script>
+  <!-- /Yandex.Metrika counter -->
+</head>
+<body>
+  <noscript><div><img src="https://mc.yandex.ru/watch/108276909" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <main class="card">
+    <h1>Оплата отменена</h1>
+    <p>Платёж не был завершён. Никакие средства не были списаны с сайта TradeForge без подтверждения платёжной системы.</p>
+    <div class="status">
+      Ты можешь вернуться и выбрать другой тариф или повторить оплату позже.
+    </div>
+    <div class="actions">
+      <a class="btn primary" href="/">Вернуться к тарифам</a>
+      <a class="btn" href="/dashboard">Перейти в Dashboard</a>
+    </div>
+  </main>
+</body>
+</html>

@@ -223,7 +223,7 @@
       box-shadow:var(--glow);
       color:rgba(255,248,228,.96);
     }
-    .explain-pill{
+    .gpt-pill{
       height:32px;
       padding:0 14px;
       border-radius:12px;
@@ -235,13 +235,13 @@
       cursor:pointer;
       transition:.15s ease;
     }
-    .explain-pill:hover{ box-shadow:0 0 0 1px rgba(255,255,255,.10); }
-    .explain-pill .badge{
+    .gpt-pill:hover{ box-shadow:0 0 0 1px rgba(255,255,255,.10); }
+    .gpt-pill .badge{
       width:10px;height:10px;border-radius:3px;
       background:linear-gradient(135deg, rgba(185,155,74,.95), rgba(140,255,220,.70));
       box-shadow:0 0 18px rgba(185,155,74,.20);
     }
-    .explain-pill span{ font-weight:700; letter-spacing:.06em; font-size:13px; opacity:.95; }
+    .gpt-pill span{ font-weight:700; letter-spacing:.06em; font-size:13px; opacity:.95; }
     .tag .dot,
     .status-dot{
       width:9px;height:9px;border-radius:999px;flex:0 0 auto;
@@ -592,7 +592,7 @@
         grid-template-columns:34px minmax(0, 1fr);
         justify-content:flex-start;
       }
-      .top-actions .explain-pill{width:100%;justify-content:center;min-width:0}
+      .top-actions .gpt-pill{width:100%;justify-content:center;min-width:0}
       .layout{grid-template-columns:1fr;min-height:auto}
       .sidebar{border-right:none;border-bottom:1px solid rgba(255,255,255,.06)}
       .sidebar-inner{position:static}
@@ -628,7 +628,7 @@
       .metric-grid{grid-template-columns:1fr}
       .top-actions{display:grid;grid-template-columns:34px minmax(0, 1fr);width:100%}
       .top-actions .icon-btn,
-      .top-actions .explain-pill{width:100%}
+      .top-actions .gpt-pill{width:100%}
       .dock-btn{font-size:10px}
     }
 
@@ -694,7 +694,7 @@
             <path d="M4 20a8 8 0 1 1 16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </button>
-        <div class="explain-pill" id="explainBtn" role="button" tabindex="0" aria-label="Explain">
+        <div class="gpt-pill" id="gptBtn" role="button" tabindex="0" aria-label="Explain">
           <span class="badge"></span><span>Explain</span>
         </div>
       </div>
@@ -1150,7 +1150,7 @@
       document.getElementById("copyBoardBtn")?.addEventListener("click", copySummary);
       document.getElementById("copyFooterBtn")?.addEventListener("click", copySummary);
       document.getElementById("manualRefreshBtn")?.addEventListener("click", () => { toast("Обновляю board…"); refresh(); });
-      document.getElementById("explainBtn")?.addEventListener("click", () => toast("Explain mode ready"));
+      document.getElementById("gptBtn")?.addEventListener("click", () => toast("Explain mode ready"));
 
       const revealEls = document.querySelectorAll(".reveal");
       if ("IntersectionObserver" in window){

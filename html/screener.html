@@ -168,7 +168,7 @@
     .icon-btn:hover{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
     .icon-btn svg{ width:18px; height:18px; opacity:.9; }
 
-    .explain-pill{
+    .gpt-pill{
       height: 34px;
       padding: 0 14px;
       border-radius: 12px;
@@ -180,13 +180,13 @@
       cursor:pointer;
       transition:.15s ease;
     }
-    .explain-pill:hover{ box-shadow: 0 0 0 1px rgba(255,255,255,.10); }
-    .explain-pill .badge{
+    .gpt-pill:hover{ box-shadow: 0 0 0 1px rgba(255,255,255,.10); }
+    .gpt-pill .badge{
       width:10px; height:10px; border-radius:3px;
       background: linear-gradient(135deg, rgba(185,155,74,.95), rgba(140,255,220,.70));
       box-shadow: 0 0 18px rgba(185,155,74,.20);
     }
-    .explain-pill span{ font-weight:700; letter-spacing:.06em; font-size: 13px; opacity:.95; }
+    .gpt-pill span{ font-weight:700; letter-spacing:.06em; font-size: 13px; opacity:.95; }
 
     /* Main layout */
     .content{
@@ -677,7 +677,7 @@
         flex-wrap: wrap;
         gap: 10px;
       }
-      .explain-pill{ flex: 1 1 auto; justify-content:center; }
+      .gpt-pill{ flex: 1 1 auto; justify-content:center; }
       .content{ padding: 10px 10px 8px; }
       .chart-wrap{ border-radius: 18px; }
       .side-card{ border-radius: 18px; }
@@ -945,7 +945,7 @@
         grid-template-columns:40px 40px minmax(0, 1fr) !important;
         gap:10px !important;
       }
-      .top-actions .explain-pill{
+      .top-actions .gpt-pill{
         width:100% !important;
         min-width:0 !important;
         justify-content:center !important;
@@ -1400,7 +1400,7 @@
         grid-template-columns:40px 40px minmax(0, 1fr) !important;
         gap:10px !important;
       }
-      .top-actions .explain-pill{
+      .top-actions .gpt-pill{
         width:100% !important;
         min-width:0 !important;
         justify-content:center !important;
@@ -1547,7 +1547,7 @@
             <path d="M20 21a8 8 0 1 0-16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </button>
-        <button class="explain-pill" id="explainBtn" title="Explain">
+        <button class="gpt-pill" id="gptBtn" title="Explain">
           <span class="badge"></span><span>Explain</span>
         </button>
       </div>
@@ -2679,7 +2679,7 @@
     });
     els.demoBtn.addEventListener("click", () => loadAll({ forceDemo:true }));
     els.refreshBtn.addEventListener("click", () => refreshSnapshot());
-    document.getElementById("explainBtn").addEventListener("click", () => toast("Explain-панель"));
+    document.getElementById("gptBtn").addEventListener("click", () => toast("GPT-панель"));
 
     try{
       if (typeof window.ym === "function") {

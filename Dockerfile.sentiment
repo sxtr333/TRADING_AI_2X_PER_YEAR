@@ -1,0 +1,12 @@
+FROM tensorflow/tensorflow:latest-gpu
+
+ENV TRANSFORMERS_NO_TF=1 \
+    PIP_NO_CACHE_DIR=1
+
+RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip install \
+      torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 && \
+    python3 -m pip install \
+      "huggingface_hub>=0.32.0" hf-xet transformers tokenizers sentencepiece accelerate pandas pyarrow
+
+WORKDIR /work

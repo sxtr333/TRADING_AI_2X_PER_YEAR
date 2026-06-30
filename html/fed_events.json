@@ -1,0 +1,698 @@
+{
+  "generated_at": "2026-01-10T00:37:37.905088+00:00",
+  "events": [
+    {
+      "timestamp": "2028-01-25T18:00:00+00:00",
+      "title": "FOMC Meeting (January 25, 2028)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2026-01-09T18:00:00+00:00",
+      "title": "Federal Reserve Board announces the designation of the Chairs and Deputy Chairs of the 12 Federal Reserve Banks for 2026",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/other20260109a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2026-01-08T21:00:00+00:00",
+      "title": "Federal Reserve Board announces approval of application by Prosperity Bancshares, Inc.",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/orders20260108a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2026-01-07T21:10:00+00:00",
+      "title": "Bowman, Modernizing Supervision and Regulation: 2025 and the Path Ahead",
+      "url": "https://www.federalreserve.gov/newsevents/speech/bowman20260107a.htm",
+      "category": "Speeches",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2026-01-06T19:00:00+00:00",
+      "title": "Minutes of the Board's discount rate meeting on December 10, 2025",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260106a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2026-01-06T18:00:00+00:00",
+      "title": "FOMC Meeting (January 6, 2026)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2026-01-06T16:00:00+00:00",
+      "title": "Federal Reserve Board issues enforcement action with former employee of Regions Bank",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/enforcement20260106a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-30T19:00:00+00:00",
+      "title": "Minutes of the Federal Open Market Committee, December 9–10, 2025",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20251230a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-30T18:00:00+00:00",
+      "title": "FOMC Meeting (December 30, 2025)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2025-12-30T16:00:00+00:00",
+      "title": "Agencies release annual asset-size thresholds under Community Reinvestment Act regulations",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/bcreg20251230a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-23T18:30:00+00:00",
+      "title": "Federal Reserve Board announces approval of the application by National Bank Holdings Corporation",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/orders20251223a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-19T18:30:00+00:00",
+      "title": "Federal Reserve Board publishes its biennial report on debit card transactions, which summarizes information collected from large debit card issuers and payment card networks",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/bcreg20251219b.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-19T15:00:00+00:00",
+      "title": "Federal Reserve Board requests public input on “payment account,” which eligible financial institutions could use for the limited purpose of clearing and settling their payments",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/bcreg20251219a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-18T14:00:00+00:00",
+      "title": "Federal Reserve Board publishes first of several staff manuals for the supervision of the largest and most complex banks",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/bcreg20251218a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-17T21:00:00+00:00",
+      "title": "Federal Reserve Board withdraws 2023 policy statement and issues new policy statement regarding the treatment of certain Board-supervised banks that facilitates responsible innovation",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/bcreg20251217a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-16T16:00:00+00:00",
+      "title": "Federal Reserve Board announces termination of enforcement actions with The Goldman Sachs Group, Inc. and Metropolitan Commercial Bank",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/enforcement20251216a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-15T16:00:00+00:00",
+      "title": "Agencies announce dollar thresholds for applicability of truth in lending and consumer leasing rules for consumer credit and lease transactions",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/bcreg20251215a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-15T16:00:00+00:00",
+      "title": "Agencies announce dollar thresholds for smaller loan exemption from appraisal requirements for higher-priced mortgage loans",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/bcreg20251215b.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-15T14:30:00+00:00",
+      "title": "Miran, The Inflation Outlook",
+      "url": "https://www.federalreserve.gov/newsevents/speech/miran20251215a.htm",
+      "category": "Speeches",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-11T22:00:00+00:00",
+      "title": "Federal Reserve Board announces approval of application by The PNC Financial Services Group, Inc.",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/orders20251211a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-11T22:00:00+00:00",
+      "title": "Federal Reserve Board announces approval of application by Banco BTG Pactual S.A., its parent holding companies, and subsidiary, BTG Pactual Bancorp, LLC",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/orders20251211b.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-11T21:00:00+00:00",
+      "title": "Federal Reserve Board announces reappointment of Reserve Bank presidents and first vice presidents",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/other20251211a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-11T16:00:00+00:00",
+      "title": "Federal Reserve Board announces termination of enforcement actions with Credit Suisse Group AG, Credit Suisse AG, Credit Suisse Holdings (USA), Inc., Credit Suisse AG, New York Branch, and JPMorgan Chase & Co.",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/enforcement20251211a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-10T19:00:00+00:00",
+      "title": "Federal Reserve issues FOMC statement",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20251210a.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-10T19:00:00+00:00",
+      "title": "Federal Reserve Board and Federal Open Market Committee release economic projections from the December 9-10 FOMC meeting",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20251210b.htm",
+      "category": "Press",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-12-02T01:00:00+00:00",
+      "title": "Powell, Opening Remarks",
+      "url": "https://www.federalreserve.gov/newsevents/speech/powell20251201a.htm",
+      "category": "Speeches",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-11-25T19:00:00+00:00",
+      "title": "Minutes of the Board's discount rate meetings on October 6, October 20, and October 29, 2025",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20251125a.htm",
+      "category": "FOMC",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-11-21T13:45:00+00:00",
+      "title": "Jefferson, AI, the Economy, and Financial Stability",
+      "url": "https://www.federalreserve.gov/newsevents/speech/jefferson20251121a.htm",
+      "category": "Speeches",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-11-21T13:30:00+00:00",
+      "title": "Barr, Welcoming Remarks",
+      "url": "https://www.federalreserve.gov/newsevents/speech/barr20251121a.htm",
+      "category": "Speeches",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-11-20T16:00:00+00:00",
+      "title": "Cook, A Policymaker’s View of Financial Stability",
+      "url": "https://www.federalreserve.gov/newsevents/speech/cook20251120a.htm",
+      "category": "Speeches",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-11-19T19:00:00+00:00",
+      "title": "Minutes of the Federal Open Market Committee, October 28-29, 2025",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20251119a.htm",
+      "category": "FOMC",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-11-19T18:00:00+00:00",
+      "title": "FOMC Meeting (November 19, 2025)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2025-11-19T15:00:00+00:00",
+      "title": "Miran, Regulatory Dominance of the Federal Reserve’s Balance Sheet",
+      "url": "https://www.federalreserve.gov/newsevents/speech/miran20251119a.htm",
+      "category": "Speeches",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-11-18T15:30:00+00:00",
+      "title": "Barr, The Case for Strong, Effective Banking Supervision",
+      "url": "https://www.federalreserve.gov/newsevents/speech/barr20251118a.htm",
+      "category": "Speeches",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-11-17T20:35:00+00:00",
+      "title": "Waller, The Case for Continuing Rate Cuts",
+      "url": "https://www.federalreserve.gov/newsevents/speech/waller20251117a.htm",
+      "category": "Speeches",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-11-17T14:30:00+00:00",
+      "title": "Jefferson, Economic Outlook and Monetary Policy",
+      "url": "https://www.federalreserve.gov/newsevents/speech/jefferson20251117a.htm",
+      "category": "Speeches",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-11-12T03:25:00+00:00",
+      "title": "Barr, AI and Central Banking",
+      "url": "https://www.federalreserve.gov/newsevents/speech/barr20251111a.htm",
+      "category": "Speeches",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-11-07T20:00:00+00:00",
+      "title": "Miran, A Global Stablecoin Glut: Implications for Monetary Policy",
+      "url": "https://www.federalreserve.gov/newsevents/speech/miran20251107a.htm",
+      "category": "Speeches",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-11-07T12:00:00+00:00",
+      "title": "Jefferson, AI and the Economy",
+      "url": "https://www.federalreserve.gov/newsevents/speech/jefferson20251107a.htm",
+      "category": "Speeches",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-11-03T19:00:00+00:00",
+      "title": "Cook, The Economic Outlook and Monetary Policy",
+      "url": "https://www.federalreserve.gov/newsevents/speech/cook20251103a.htm",
+      "category": "Speeches",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-10-30T13:55:00+00:00",
+      "title": "Bowman, Opening Remarks",
+      "url": "https://www.federalreserve.gov/newsevents/speech/bowman20251030a.htm",
+      "category": "Speeches",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-10-29T18:00:00+00:00",
+      "title": "Federal Reserve issues FOMC statement",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20251029a.htm",
+      "category": "FOMC",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-10-14T18:00:00+00:00",
+      "title": "Minutes of the Board's discount rate meetings on August 18 and September 17, 2025",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20251014a.htm",
+      "category": "FOMC",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-10-08T18:00:00+00:00",
+      "title": "Minutes of the Federal Open Market Committee, September 16–17, 2025",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20251008a.htm",
+      "category": "FOMC",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-10-08T18:00:00+00:00",
+      "title": "FOMC Meeting (October 8, 2025)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2025-09-17T18:00:00+00:00",
+      "title": "Federal Reserve issues FOMC statement",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250917a.htm",
+      "category": "FOMC",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-09-17T18:00:00+00:00",
+      "title": "Federal Reserve Board and Federal Open Market Committee release economic projections from the September 16-17 FOMC meeting",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250917b.htm",
+      "category": "FOMC",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-09-05T17:30:00+00:00",
+      "title": "Federal Open Market Committee announces its tentative meeting schedule for 2027",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250905a.htm",
+      "category": "FOMC",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-08-26T18:00:00+00:00",
+      "title": "Minutes of the Board's discount rate meetings on July 21 and July 30, 2025",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250826a.htm",
+      "category": "FOMC",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-08-22T14:00:00+00:00",
+      "title": "Federal Open Market Committee announces approval of updates to its Statement on Longer-Run Goals and Monetary Policy Strategy",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250822a.htm",
+      "category": "FOMC",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-08-20T18:00:00+00:00",
+      "title": "Minutes of the Federal Open Market Committee, July 29–30, 2025",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250820a.htm",
+      "category": "FOMC",
+      "source": "fed_rss"
+    },
+    {
+      "timestamp": "2025-08-20T18:00:00+00:00",
+      "title": "FOMC Meeting (August 20, 2025)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2025-07-09T18:00:00+00:00",
+      "title": "FOMC Meeting (July 9, 2025)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2025-05-28T18:00:00+00:00",
+      "title": "FOMC Meeting (May 28, 2025)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2025-04-09T18:00:00+00:00",
+      "title": "FOMC Meeting (April 9, 2025)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2025-02-19T18:00:00+00:00",
+      "title": "FOMC Meeting (February 19, 2025)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2025-01-08T18:00:00+00:00",
+      "title": "FOMC Meeting (January 8, 2025)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2024-11-26T18:00:00+00:00",
+      "title": "FOMC Meeting (November 26, 2024)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2024-10-09T18:00:00+00:00",
+      "title": "FOMC Meeting (October 9, 2024)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2024-08-21T18:00:00+00:00",
+      "title": "FOMC Meeting (August 21, 2024)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2024-07-03T18:00:00+00:00",
+      "title": "FOMC Meeting (July 3, 2024)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2024-05-22T18:00:00+00:00",
+      "title": "FOMC Meeting (May 22, 2024)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2024-04-10T18:00:00+00:00",
+      "title": "FOMC Meeting (April 10, 2024)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2024-02-21T18:00:00+00:00",
+      "title": "FOMC Meeting (February 21, 2024)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2024-01-03T18:00:00+00:00",
+      "title": "FOMC Meeting (January 3, 2024)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2023-11-21T18:00:00+00:00",
+      "title": "FOMC Meeting (November 21, 2023)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2023-10-11T18:00:00+00:00",
+      "title": "FOMC Meeting (October 11, 2023)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2023-08-16T18:00:00+00:00",
+      "title": "FOMC Meeting (August 16, 2023)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2023-07-05T18:00:00+00:00",
+      "title": "FOMC Meeting (July 5, 2023)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2023-05-24T18:00:00+00:00",
+      "title": "FOMC Meeting (May 24, 2023)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2023-04-12T18:00:00+00:00",
+      "title": "FOMC Meeting (April 12, 2023)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2023-02-22T18:00:00+00:00",
+      "title": "FOMC Meeting (February 22, 2023)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2023-01-04T18:00:00+00:00",
+      "title": "FOMC Meeting (January 4, 2023)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2022-11-23T18:00:00+00:00",
+      "title": "FOMC Meeting (November 23, 2022)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2022-10-12T18:00:00+00:00",
+      "title": "FOMC Meeting (October 12, 2022)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2022-08-17T18:00:00+00:00",
+      "title": "FOMC Meeting (August 17, 2022)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2022-07-06T18:00:00+00:00",
+      "title": "FOMC Meeting (July 6, 2022)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2022-05-25T18:00:00+00:00",
+      "title": "FOMC Meeting (May 25, 2022)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2022-04-06T18:00:00+00:00",
+      "title": "FOMC Meeting (April 6, 2022)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2022-02-16T18:00:00+00:00",
+      "title": "FOMC Meeting (February 16, 2022)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2022-01-05T18:00:00+00:00",
+      "title": "FOMC Meeting (January 5, 2022)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2021-11-24T18:00:00+00:00",
+      "title": "FOMC Meeting (November 24, 2021)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2021-10-13T18:00:00+00:00",
+      "title": "FOMC Meeting (October 13, 2021)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2021-08-18T18:00:00+00:00",
+      "title": "FOMC Meeting (August 18, 2021)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2021-07-07T18:00:00+00:00",
+      "title": "FOMC Meeting (July 7, 2021)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2021-05-19T18:00:00+00:00",
+      "title": "FOMC Meeting (May 19, 2021)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2021-04-07T18:00:00+00:00",
+      "title": "FOMC Meeting (April 7, 2021)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2021-02-17T18:00:00+00:00",
+      "title": "FOMC Meeting (February 17, 2021)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2021-01-06T18:00:00+00:00",
+      "title": "FOMC Meeting (January 6, 2021)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2020-11-25T18:00:00+00:00",
+      "title": "FOMC Meeting (November 25, 2020)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2020-10-07T18:00:00+00:00",
+      "title": "FOMC Meeting (October 7, 2020)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2020-08-19T18:00:00+00:00",
+      "title": "FOMC Meeting (August 19, 2020)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2020-07-01T18:00:00+00:00",
+      "title": "FOMC Meeting (July 1, 2020)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2020-05-20T18:00:00+00:00",
+      "title": "FOMC Meeting (May 20, 2020)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2020-04-08T18:00:00+00:00",
+      "title": "FOMC Meeting (April 8, 2020)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2020-03-23T18:00:00+00:00",
+      "title": "FOMC Meeting (March 23, 2020)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2020-03-15T18:00:00+00:00",
+      "title": "FOMC Meeting (March 15, 2020)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2020-03-03T18:00:00+00:00",
+      "title": "FOMC Meeting (March 3, 2020)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    },
+    {
+      "timestamp": "2020-02-19T18:00:00+00:00",
+      "title": "FOMC Meeting (February 19, 2020)",
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "category": "FOMC",
+      "source": "fed_calendar_html"
+    }
+  ]
+}

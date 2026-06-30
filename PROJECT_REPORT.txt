@@ -1,0 +1,1227 @@
+MODEL6 PROJECT DEEP REPORT
+Generated (UTC): 2026-01-14 18:49:41Z
+
+TL;DR FOR NEW CODEX (EXEC SUMMARY)
+
+- Project: BTCUSDT 15m ML forecasting + FastAPI + web UI in html/aladin_from_image.html.
+- Core horizon: h20 (≈5h). Multi-horizon: h80/h160 (≈20h/40h).
+- Production models (older baseline): model_battle_itransformer.keras + norm_stats_battle_itransformer.npz (h20)
+  and model_15m_itransformer_tb_multi.keras + norm_stats_15m_itransformer_tb_multi.npz (multi).
+- Latest experiments: news-based models in new_models/2026-01-13..2026-01-14.
+- Best logged news model so far: v5 (dR + per-head scale) in eval_news_xlmr_v5_dr_scale_line.log.
+- v6 (dR + per-head scale + 8 nodes) trained, eval blocked by Keras3 loader issues in eval_price_quality.py.
+- UI: Binance klines for candles; buttons 15m/1h/4h/1d; PREDICT -> horizon -> ПРОГНОЗ.
+- Backend: serve_fastapi.py exposes /forecast, /forecast_multi, /news; expects 15m grid.
+- Live update pipeline: scripts/live_update_once.sh (news->sentiment->OHLCV->features).
+- One command to run site: scripts/run_servers.sh (or run_live_site.sh for auto-updates).
+- Common errors: Keras3/legacy mismatch; feature/stats length mismatch; Cloudflared tunnel 1033.
+
+Quick Start (copy-paste):
+  cd /home/vitamind/my_project/model6
+  source .venv/bin/activate
+  bash scripts/run_servers.sh
+  # open http://localhost:8080/aladin_from_image.html
+  # API health: curl http://localhost:8000/health
+
+1) PROJECT OVERVIEW
+
+# PROJECT_CONTEXT (model6)
+
+- **Проект** объединяет сбор фич, обучение трансформерных моделей и FastAPI/HTML-интерфейс для прогноза цены
+BTCUSDT на 15-минутных свечах и вывода пунктирной линии в масштабе графика.
+- **Фичи** строятся из паркетов `data/BTCUSDT_*m.parquet` и вспомогательных датасетов (LIQ, funding, OB,
+basis, Bybit/Binance метрики) в `build_features.py`/`build_features_multi_tf.py`.
+- **Модели** — iTransformer/patchtst/tsmixer (цели `target_ret`, `label_3cls`, `tb_label`, VF-
+мультиградиенты), сохраняются `.keras` + `.npz` stats (напр. `norm_stats_battle_itransformer.npz` и
+`norm_stats_15m_itransformer_tb_multi.npz`).
+- **Боевая ветка**: `best/boevaya` содержит стабильные веса модели на 5h (h20) и соответствующие stats для
+фронтенда.
+- **Сервер**: `serve_fastapi.py` загружает h20 и multi-модели и возвращает `/forecast` + `/forecast_multi` с
+шагом 15m; используется UI `html/aladin_from_image.html`.
+- **UI** теперь строится на Lightweight Charts, слушает кнопки `PREDICT → 5H/20H/40H/80H/160H → ПРОГНОЗ` и
+рисует прогноз от FastAPI.
+- **Реалтайм**: `realtime_stream.py` подключается к Bybit, делает MC-прогон и логирует drift/toxic сигналы
+чтобы вскрыть фазу исполнения.
+- **Отчеты**: `reports/` и `walk_forward_eval.py` выводят equity curve, thresholds, fee/slippage тесты;
+`eval_metrics.py`/`eval_tb_multi.py` оценивают классификационные метрики.
+- **Инструменты**: `ensemble_predict.py`, `feature_importance.py`, `tune_keras.py`, `retrain.py` помогают
+собрать ансамбли, оценить признаки и переобучить модель.
+- **Интеграция**: `html/` содержит layout + `chat_summary.pdf` с hotspots; FastAPI ожидает
+`norm_stats`/`features` из `data/BTCUSDT_15m_features_h20_v2.parquet`.
+
+## Быстрый старт (команды для ключевых сценариев)
+
+1. Построить 15m фичи (OHLCV + aux + labels):
+   ```bash
+   python3 build_features.py \
+     --input data/BTCUSDT_15m.parquet \
+     --aux data/BTCUSDT_15m_aux.parquet \
+     --output data/BTCUSDT_15m_features_h20_v2.parquet \
+     --horizon 20 \
+     --multi-horizons 20,80,160
+   ```
+2. Обучить iTransformer (VF + multi):
+   ```bash
+   python3 train_keras.py \
+     --features data/BTCUSDT_15m_features_h20_v2.parquet \
+     --model-out model_15m_itransformer_vf.keras \
+     --stats-out norm_stats_15m_itransformer_vf.npz \
+     --seq-len 256 --epochs 12 --arch itransformer --revin --multi-horizons 20,80,160
+   ```
+3. Оценить walk-forward/fee/slippage:
+   ```bash
+   python3 walk_forward_eval.py \
+     --features data/BTCUSDT_15m_features_h20_v2.parquet \
+     --model model_15m_itransformer_vf.keras \
+     --stats norm_stats_15m_itransformer_vf.npz \
+     --train-end 2024-12-01T00:00:00Z --val-end 2025-06-01T00:00:00Z \
+     --threshold 0.58 --fee-bps 2.0 --slip-bps 3.0
+   ```
+4. Запустить FastAPI (сервер для сайта, требует `.venv` + `tf_keras`):
+   ```bash
+   source .venv/bin/activate
+   export TF_USE_LEGACY_KERAS=1
+   python3 serve_fastapi.py \
+     --model-h20 model_battle_itransformer.keras \
+     --stats-h20 norm_stats_battle_itransformer.npz \
+     --model-multi model_15m_itransformer_tb_multi.keras \
+     --stats-multi norm_stats_15m_itransformer_tb_multi.npz \
+     --features data/BTCUSDT_15m_features_h20_v2.parquet \
+     --seq-len 256
+   ```
+5. Запустить веб-интерфейс (локальный HTTP чтобы подгрузить скрипты):
+   ```bash
+   cd html
+   python3 -m http.server 8082
+   # открыть http://localhost:8082/aladin_from_image.html
+   ```
+
+## Данные / модели / отчеты (хранилища и форматы)
+
+- `data/`: raw OHLCV/aux/Binance cache (`.parquet`), сгенерённые `.parquet` фичи, `metrics/*.csv`.
+- `best/`, `model_*.keras`, `norm_stats_*.npz`: готовые веса; battle/multi/vf модели для прогноза на
+5h/20h/40h/80h/160h.
+- `reports/`: equity-графики, CSV/PNG доклады walk‑forward/feature importance, и файлы `forecast_*.csv` для
+UI.
+- `html/`: front-end (Lightweight Charts, прогнозная панель) + `chat_summary.pdf` (hotspots, прорисовки,
+Visual spec).
+
+2) ARCHITECTURE OVERVIEW
+
+# Architecture (model6)
+
+## Карта модулей (папка/файл → роль)
+
+- `data/` — паркет-файлы raw OHLCV (`BTCUSDT_{1m,5m,15m,30m,1h,4h,1d}.parquet`), aux (`*_aux*.parquet`,
+Bybit/Binance metrics), кеш Binance (`binance_cache/`) и промежуточные фичи (`*_features*.parquet`).
+- `build_features.py` / `build_features_multi_tf.py` — вычисляют 54+ признаков (OHLCV, OI, funding, liq,
+basis, order-book, volatility, TA, time, Triple-Barrier и VF-таргеты) и сохраняют `.parquet` с обязательными
+`target_ret`, `label_3cls`, `tb_label`, `vf_label` колонками.
+- `model_layers.py` + `trading_keras_core.py` — задаютдоврати, RevIN, DropPath, iTransformer/TSMixer блоки и
+`tf.data` окна; используется во всех тренировках (`train_keras.py`, `train_keras_multitf.py`,
+`train_keras_multihorizon.py`).
+- `train_*.py` (`train_keras.py`, `train_keras_multitf.py`, `train_keras_multihorizon.py`) — обучают
+классификаторы/регрессоры (price+cls+multi-horizon), записывают `.keras` и `norm_stats_*.npz`.
+- `walk_forward_eval.py`, `eval_metrics.py`, `eval_tb_multi.py`, `eval_and_forecast.py` — делают walk-forward,
+кластерные пороги, рассчитывают fee/slippage, рисуют equity/metrics CSV и PNG.
+- `inference_keras.py`, `realtime_stream.py`, `serve_fastapi.py` — нормализуют окна, выполняют предикт (MC
+dropout), выдают JSON для UI и, в случае `realtime_stream.py`, подключаются к потокам (Bybit/WS).
+- `html/` — frontend (Lightweight Charts, кнопки `PREDICT → 5H/20H/40H/80H/160H → ПРОГНОЗ`, иконки, news).
+`chat_summary.pdf` описывает hotspots, overlay и взаимодействие с TradingView.
+- `best/` — сохранённые модели (battle, multi, profit, etc.) и статистики (`norm_stats_*.npz`) для фронтэнда и
+анализа.
+- `scripts/`, `reports/`, `PIPELINE.md`, `run_*.sh`, `Dockerfile` — вспомогательные скрипты/отчёты/контейнеры
+для построения данных, обучения и развёртывания.
+
+## Dataflow / Controlflow («данные → фичи → модель → сигналы → риск → исполнение»)
+
+1. **Данные**: raw OHLCV/aux паркет-источники (`data/`), Binance кэш (`binance_cache/`), Bybit LIQ/funding
+(`scripts/fetch_*liquidations.py`) и новости `html/fed_events.json`.
+2. **Фичи**: `build_features*.py` строят окна с time, TA, OB, volatility, zeros-filled liq,
+target_ret/label_*.pn; сохраняют в `data/BTCUSDT_15m_features_*.parquet`.
+3. **Модели**: `train_*.py` создает `model_*.keras` + `norm_stats_*.npz` (mean/std/feature_names/seq_len).
+RevIN/DropPath обеспечивают leakage-safe training; `--multi-horizons` добавляет 20/80/160 шагов.
+4. **Предикт/сигналы**: `serve_fastapi.py` и `realtime_stream.py` загружают stats, нормализуют окна (15m, 5h)
+и возвращают log-return/price с `forecast`/`forecast_multi`.
+5. **Риск**: `walk_forward_eval.py` с `threshold`, `fee-bps`, `slip-bps`, `max-dd` и `cooldown` параметрами
+превращает probabilistic предики в equity/signal отчёты (CSV/PNG).
+6. **UI/исполнение**: `html/aladin_from_image.html` рисует Lightweight Charts + прогнозную линию, кнопки
+`PREDICT` → “горизонт” → `ПРОГНОЗ` (проверка ready state) и сообщает FastAPI вашим моделям.
+
+## Важные сущности
+
+- **Датасеты**:
+  - `data/BTCUSDT_15m_features_h20_v2.parquet` — основной input для FastAPI + training (seq_len 256, 54 фичи).
+  - `best/boevaya/model_15m_itransformer_boevaya` (+ `norm_stats_15m_itransformer_boevaya.npz`) — сильная 5h
+модель для фронта.
+  - `best/boevaya/model_15m_itransformer_tb_multi` и `norm_stats_15m_itransformer_tb_multi.npz` — multi-
+horizon model (20/80/160).
+  - `reports/`, `data/binance_cache/`, `metrics_*.csv` — для анализа.
+- **Таргеты**: `target_ret`, `target_dir`, `label_3cls`, `tb_label`, `vf_label`, `label_3cls_h{h}`,
+`tb_label_h{h}`, `target_ret_h{h}` (например, h=20,80,160).
+- **Горизонты**: `h20` → 5 hours, `h80` → 20 hours, `h160` → 40+ hours; FastAPI использует `forecast_multi`
+(15m steps) и ensures `step_min=15`.
+- **Stats**: `norm_stats_*.npz` (mean/std/feature_names/seq_len), `stats` must match features and reshape
+(watch for `54 vs 24` mismatch errors).
+
+## Ключевые точки конфигурации
+
+- `build_features.py`: задаёт input/output parquet, `--horizon`, `--target-mode`, `--multi-horizons`, `--aux`
+(Base TF 15m), `--vf-k`, `--tb-k`.
+- `train_keras.py`: `--features`, `--seq-len`, `--model-out`, `--stats-out`, `--arch`
+(itransformer/patchtst/tsmixer), `--revin`, `--multi-horizons`, `--feature-dropout`, `--drop-path`, `--price-
+weight`.
+- `walk_forward_eval.py`: `--features`, `--model`, `--stats`, `--seq-len`, `--train-end`, `--val-end`,
+`--threshold`, `--fee-bps`, `--slip-bps`, `--max-dd`, `--dd-reset`, `--report-csv/png`.
+- `serve_fastapi.py`: `--model-h20`, `--stats-h20`, `--model-multi`, `--stats-multi`, `--features`, `--seq-
+len`, `--host`, `--port`. FastAPI expects `TF_USE_LEGACY_KERAS=1` + `tf_keras` when loading
+`model_layers.RevIN`.
+- `realtime_stream.py`: `--model`, `--seq-len`, `--symbol`, `--log-file`, `--mc-samples` (для MC dropout drift
+alerts).
+
+3) CONFIG / CLI REFERENCE (KEY PARAMETERS)
+
+# Config reference (CLI)
+
+> Таблица перечисляет основные параметры для `build_features.py`, `train_keras.py`, `walk_forward_eval.py`,
+`realtime_stream.py` (runner/бот) и `serve_fastapi.py` (FastAPI-интерфейс сайта). Пояснены дефолты, возможные
+значения и влияние на результат.
+
+## `build_features.py`
+
+| Arg | Default | Values | Effect |
+|---|---|---|---|
+| `--input` | required | path | Raw OHLCV Parquet (e.g., `data/BTCUSDT_15m.parquet`). |
+| `--output` | required | path | Output features Parquet (needed для training/serve). |
+| `--aux` | None | path | Aux data (OI/funding/liq/basis/ratios) aligned by `timestamp`. |
+| `--spot` | None | path | Spot CSV/Parquet for basis spreads. |
+| `--news` | None | path | News dataset (parquet/jsonl/csv) for `news_*` features. |
+| `--horizon` | 1 | int | Forecast horizon (в барах базового TF). |
+| `--target-mode` | `log_return` | `log_return` / `price` | Целевой столбец (`target_ret` или прямой `price`).
+|
+| `--base-tf-min` | None | int | Базовый timeframe в минутах (auto-inf если не указан). |
+| `--vf-k` | 0.5 | float | K-параметр volatility-filter для `target_dir_vf`. |
+| `--vf2-k` | None | float | Второй `k` для `target_dir_vf2`. |
+| `--vf-col` | `rv_long` | str | Колонка volatility для VF фильтра. |
+| `--tb-horizon` | None | int | Triple-barrier ширина (по умолчанию `horizon*4`). |
+| `--tb-k` | 0.8 | float | Множитель `k` в triple-barrier для `tb_label`. |
+| `--tb-sigma-col` | `rv_long` | str | Колонка σ в triple-barrier. |
+| `--multi-horizons` | None | CSV строка | Добавляет `label_3cls_h{h}` / `tb_label_h{h}` / `target_ret_h{h}`
+(пример: `20,80,160`). |
+
+## `train_keras.py` (основной тренинг)
+
+| Arg | Default | Values | Effect |
+|---|---|---|---|
+| `--features` | required | path | Features Parquet (columns include `timestamp`, features, targets). |
+| `--seq-len` | 256 | int | Sequence length для окон модели. |
+| `--batch-size` | 64 | int | Batch size на этапе тренинга. |
+| `--epochs` | 10 | int | Эпохи. |
+| `--lr` | 3e-4 | float | Base learning rate. |
+| `--model-out` | required | path | Выходной `.keras` файл. |
+| `--stats-out` | required | path | `.npz` с normalize stats. |
+| `--target-col` | None | str | Имя классификационного target-а (auto по `target_dir`/`label_3cls`). |
+| `--price-col` | None | str | Regression target (например `target_ret`). |
+| `--purge-gap` | 0 | int | Пробел между train/val агрегатами (rows). |
+| `--train-end` | None | ISO ts | Timestamp split (UTC). |
+| `--val-end` | None | ISO ts | Timestamp для val. |
+| `--target-horizon` | 0 | int | Horizon rows, используемый для предотвращения leakage при split. |
+| `--multi-horizons` | None | CSV | Доп. классификационные головы (например `20,80,160`). |
+| `--num-classes` | 1 | int | 0=нет cls head, 1=binary, 3=softmax. |
+| `--cls-weight` | 1.0 | float | Вес класса в loss (CLS). |
+| `--price-weight` | 0.0 | float | Вес regression loss. |
+| `--pos-weight` | None | float | Положительный вес (binary). |
+| `--auto-pos-weight` | False | flag | Автоподбор `pos_weight`. |
+| `--cls-loss` | `bce` | `bce` / `focal` | Тип классификационной функции. |
+| `--focal-alpha` | 0.25 | float | Focal loss α. |
+| `--focal-gamma` | 2.0 | float | Focal loss γ. |
+| `--label-smoothing` | 0.0 | float | Label smoothing для BCE. |
+| `--price-loss` | `huber` | `huber`/`mse`/`logcosh`/`mae` | Regression loss. |
+| `--huber-delta` | 1.0 | float | Параметр Huber. |
+| `--quantiles` | None | CSV | Включает quantile head (e.g. `0.1,0.5,0.9`). |
+| `--train-ratio` | 0.70 | float | Train ratio, если `--train-end` не задан. |
+| `--val-ratio` | 0.15 | float | Val ratio (если нет `--val-end`). |
+| `--feature-cols` | None | JSON list | Принудительный порядок фич (например `["open","close"]`). |
+| `--q-low` | 0.001 | float | Clips `target_ret` quantiles before norm (low). |
+| `--q-high` | 0.999 | float | Clips quantiles (high). |
+| `--d-model` | 128 | int | Hidden size. |
+| `--layers` | 2 | int | Количество encoder blocks. |
+| `--heads` | 4 | int | Multi-head attention. |
+| `--arch` | `transformer` | `transformer` / `patchtst` / `tsmixer` / `itransformer` | Backbone. |
+| `--pooling` | `multi` | str | Pooling head (`multi`/`cls`/`reg`). |
+| `--patch-size` | 16 | int | PatchTST patch size. |
+| `--patch-stride` | 16 | int | Patch stride. |
+| `--tsmixer-mlp` | 256 | int | TSMixer MLP dim. |
+| `--var-layers` | 2 | int | iTransformer variance layers. |
+| `--time-layers` | 2 | int | iTransformer time layers. |
+| `--revin` | False | flag | Enable RevIN. |
+| `--revin-affine` | False | flag | RevIN affine parameters. |
+| `--feature-dropout` | 0.05 | float | SpatialDropout1D rate. |
+| `--dropout` | 0.10 | float | Dropout. |
+| `--drop-path` | 0.05 | float | Stochastic depth for transformer blocks. |
+| `--cosine` | False | flag | Warmup + cosine LR scheduler. |
+| `--warmup-steps` | 0 | int | Warmup steps for cosine. |
+| `--patience` | 3 | int | Early stopping patience. |
+| `--min-delta` | 1e-4 | float | Early stopping min delta. |
+| `--start` | None | ISO ts | Filter df `timestamp >= start`. |
+| `--end` | None | ISO ts | Filter df `timestamp <= end`. |
+| `--sample-weight-col` | None | column | Column for weighting samples. |
+| `--sample-weight-k` | 0.0 | float | Weight scaling (`1 + k * zscore`). |
+| `--sample-weight-clip` | 3.0 | float | Clip weights to `[1/clip, clip]`. |
+
+## `walk_forward_eval.py`
+
+| Arg | Default | Values | Effect |
+|---|---|---|---|
+| `--features` | required | path | Features Parquet. |
+| `--model` | required | path | Saved `.keras` model. |
+| `--stats` | required | path | Normalization stats `.npz`. |
+| `--seq-len` | None | int | Sequence length (fallback from stats). |
+| `--train-end` | required | ISO ts | Разделение train/val по timestamp. |
+| `--val-end` | required | ISO ts | Val end timestamp. |
+| `--purge-gap` | 0 | int | Rows gap чтобы исключить leakage. |
+| `--target-horizon` | 0 | int | Horizon used in `build_end_indices`. |
+| `--threshold` | 0.5 | float | Long signal threshold. |
+| `--short-threshold` | None | float | Short threshold (если long_short). |
+| `--use-quantile-signal` | False | flag | Use quantile head instead of cls. |
+| `--quantiles` | None | CSV | Quantiles defined in training (e.g., `0.1,0.5,0.9`). |
+| `--q-min` | 0.0 | float | Minimum return magnitude for quantile signal. |
+| `--mode` | `long_short` | `long_only` / `long_short` | Trading mode. |
+| `--opt-metric` | `none` | `none`, `sharpe`, `calmar` | Auto optimize threshold. |
+| `--thr-min` | 0.50 | float | Threshold scan min. |
+| `--thr-max` | 0.70 | float | Threshold scan max. |
+| `--thr-step` | 0.01 | float | Threshold step. |
+| `--fee-bps` | 0.0 | float | Fee basis points per trade. |
+| `--slip-bps` | 0.0 | float | Slippage basis points. |
+| `--min-hold` | 1 | int | Minimum bars to hold trade. |
+| `--cooldown` | 0 | int | Cooldown bars after trade. |
+| `--max-trades-per-day` | 0 | int | Trade cap (0 disables). |
+| `--vol-col` | None | column | Volatility column for filters. |
+| `--vol-k` | 0.0 | float | Vol threshold scale. |
+| `--vol-clip` | 0.25 | float | Clip vol sizing. |
+| `--vol-block` | 999.0 | float | Block trades if vol>threshold. |
+| `--vol-size-k` | 0.0 | float | Size scaling by vol. |
+| `--max-dd` | 0.0 | float | Drawdown stop. |
+| `--daily-limit` | 0.0 | float | Daily loss limit. |
+| `--dd-reset` | `none` | `none`/`daily`/`monthly`/`quarterly` | Drawdown reset cadence. |
+| `--prob-ema` | 0.0 | float | EMA smoothing for probabilities. |
+| `--trade-band` | 0.0 | float | Dead-band around 0.5. |
+| `--report-csv` | None | path | Monthly report CSV. |
+| `--equity-csv` | None | path | Equity curve CSV. |
+| `--equity-png` | None | path | Equity PNG. |
+| `--model-name` | None | str | Label for reports/logs. |
+
+## `realtime_stream.py` (runner/бот)
+
+| Arg | Default | Values | Effect |
+|---|---|---|---|
+| `--model` | required | path | `.keras` model for realtime inference. |
+| `--seq-len` | 256 | int | Sequence length. |
+| `--symbol` | `BTCUSDT` | str | Bybit symbol. |
+| `--log-file` | None | path | CSV log for timestamp,pred,close. |
+| `--drift-threshold` | 3.0 | float | Z-score for drift alerts. |
+| `--ema-alpha` | 0.2 | float | EMA smoothing for predictions. |
+| `--mc-samples` | 1 | int | MC dropout samples (>1 enables stochastic forward). |
+
+## `serve_fastapi.py`
+
+| Arg | Default | Values | Effect |
+|---|---|---|---|
+| `--model-h20` | `model_battle_itransformer.keras` | path | `.keras` model trained for h20 (5h / 20 steps). |
+| `--stats-h20` | `norm_stats_battle_itransformer.npz` | path | `.npz` stats matching h20 model
+(mean/std/feature_names). |
+| `--model-multi` | `model_15m_itransformer_tb_multi.keras` | path | Multi-horizon `.keras` (h80/h160). |
+| `--stats-multi` | `norm_stats_15m_itransformer_tb_multi.npz` | path | `.npz` stats for multi horizon. |
+| `--seq-len` | 256 | int | Sequence length used at training. |
+| `--features` | None | path | Features parquet used by `/forecast[_multi]`. |
+| `--host` | `0.0.0.0` | str | Bind host. |
+| `--port` | 8000 | int | Bind port. |
+
+### Env vars (serve_fastapi)
+
+- `NEWS_PATH` (default: `data/news/news.parquet`) – news store used by `/news` and `/news_agg`.
+- `ALLOW_ORIGINS` (default: `http://localhost:8080,http://127.0.0.1:8080`) – CORS allowlist.
+  Use `*` for public tunnels.
+
+### News ingest (scripts/news_ingest.py)
+
+Env vars (optional):
+
+- `CRYPTOPANIC_API_KEY`
+- `CRYPTOCOMPARE_API_KEY`
+- `COINMARKETCAL_API_KEY`
+
+Example:
+
+`python3 scripts/news_ingest.py --out data/news/news.parquet --currency BTC --max-items 200 --start
+2023-01-01T00:00:00Z --end 2026-01-12T00:00:00Z`
+
+### CC-NEWS pipeline (scripts/cc_news_pipeline.py)
+
+Stream WARC, filter on-the-fly, save parquet to HDD:
+
+`python3 scripts/cc_news_pipeline.py --start-month 2025-07 --end-month 2025-12 --out-dir /mnt/data/cc-news
+--checkpoint /mnt/data/cc-news/checkpoints/processed.txt`
+
+### Env vars (serve_fastapi)
+
+- `NEWS_PATH` (default: `data/news/news.parquet`) – news store used by `/news` and `/news_agg`.
+- `ALLOW_ORIGINS` (default: `http://localhost:8080,http://127.0.0.1:8080`) – CORS allowlist.
+  Use `*` for public tunnels.
+
+### News ingest (scripts/news_ingest.py)
+
+Env vars (optional):
+
+- `CRYPTOPANIC_API_KEY`
+- `CRYPTOCOMPARE_API_KEY`
+- `COINMARKETCAL_API_KEY`
+
+Example:
+
+`python3 scripts/news_ingest.py --out data/news/news.parquet --currency BTC --max-items 200`
+
+4) CODE INDEX (SUMMARY OF KEY MODULES)
+
+{
+  "files": [
+    {
+      "path": "build_features.py",
+      "purpose": "Собирает 15m/1h features, добавляет индикаторы, regime/OB/volatility, triple-barrier/VF
+targets и сохраняет ready-to-train Parquet.",
+      "key_functions": [
+        "build_features(...)",
+        "add_time_features",
+        "bollinger/atr/rsi/macd/adx/stoch_rsi/obv/cmf",
+        "triple_barrier_labels",
+        "add_regime_features",
+        "persist_features"
+      ],
+      "inputs": [
+        "Raw OHLCV Parquet (`--input`)",
+        "Optional aux (OI/funding/liquidations) `--aux`",
+        "Optional spot close for basis `--spot`"
+      ],
+      "outputs": [
+        "Features Parquet (`--output`) with 54+ cols",
+        "Target columns (`target_ret`, `target_dir`, `label_3cls`, `tb_label`, multi-h labels)"
+      ],
+      "dependencies": [
+        "trading_keras_core.default_feature_list",
+        "pandas/numpy",
+        "CLI args (horizon, tb, vf)"
+      ]
+    },
+    {
+      "path": "train_keras.py",
+      "purpose": "Обучает Transformer/PatchTST/TSMixer/iTransformer с cls/price головами, сохраняет `.keras` и
+`.npz` stats.",
+      "key_functions": [
+        "make_window_dataset",
+        "build_sequence_model",
+        "train_loop (Keras callbacks: patience/min_delta)"
+      ],
+      "inputs": [
+        "Features Parquet (`--features`)",
+        "Targets (`target_ret`, `target_dir`, `label_3cls`, `tb_label`, multi-h)",
+        "CLI params (arch, dropout, lr, scheduler, quantiles)"
+      ],
+      "outputs": [
+        "`--model-out` (.keras)",
+        "`--stats-out` (.npz) with mean/std/feature_names/seq_len/quantiles",
+        "Logs in stdout and optional reports"
+      ],
+      "dependencies": [
+        "trading_keras_core.build_sequence_model",
+        "model_layers.RevIN/DropPath/ITransformerBlock/TSMixerBlock",
+        "tensorflow keras (Factory: tf.keras.layers)"
+      ]
+    },
+    {
+      "path": "walk_forward_eval.py",
+      "purpose": "Walk-forward evaluation: пересчитывает сигналы/PNL с `threshold/fee/slip` и пишет
+equity/report CSV/PNG.",
+      "key_functions": [
+        "build_end_indices",
+        "predict_cls/price_q",
+        "pnl_metrics + max_dd_with_reset",
+        "generate monthly reports"
+      ],
+      "inputs": [
+        "Features parquet + timestamp",
+        "Trained `.keras` model + `.npz` stats",
+        "CLI params (train-end, val-end, thresholds, fee/slippage, risk limits)"
+      ],
+      "outputs": [
+        "Console summary",
+        "Optional `--report-csv`, `--equity-csv`, `--equity-png`"
+      ],
+      "dependencies": [
+        "pandas/numpy/tensorflow",
+        "model_layers custom objects",
+        "`quantiles` from stats for quantile signal"
+      ]
+    },
+    {
+      "path": "serve_fastapi.py",
+      "purpose": "FastAPI inference+forecast server; exposes `/predict`, `/forecast`, `/forecast_multi` for
+site integration.",
+      "key_functions": [
+        "create_app(...)",
+        "_normalize_array",
+        "_predict_next_log_return",
+        "_predict_multi"
+      ],
+      "inputs": [
+        "CLI args `--model-h20`, `--model-multi`, stats, features",
+        "Request payload window/mean/std"
+      ],
+      "outputs": [
+        "JSON predictions",
+        "forecast points aligned to 15m steps"
+      ],
+      "dependencies": [
+        "tf.keras custom layers (RevIN, TSMixerBlock, ITransformerBlock, LastStep, DropPath)",
+        "numpy/pandas",
+        "CORS for http://localhost:8080 (frontend)"
+      ]
+    },
+    {
+      "path": "realtime_stream.py",
+      "purpose": "Runner/бот: читает Bybit websocket, крутит rolling window, пишет прогнозы/alerts.",
+      "key_functions": [
+        "run_realtime(...)",
+        "update rolling dataset",
+        "drift alert by z-score",
+        "MC dropout sampling"
+      ],
+      "inputs": [
+        "CLI args `--model`, `--symbol`, `--drift-threshold`, `--mc-samples`",
+        "Bybit websocket klines"
+      ],
+      "outputs": [
+        "Logged predictions (optional CSV)",
+        "Console drift alerts"
+      ],
+      "dependencies": [
+        "websockets/asyncio",
+        "serve_fastapi-compatible stats"
+      ]
+    },
+    {
+      "path": "inference_keras.py",
+      "purpose": "Простой оффлайн inference на последнем окне из features.",
+      "key_functions": [
+        "load_last_window",
+        "normalize with stats",
+        "model.predict"
+      ],
+      "inputs": [
+        "Features parquet",
+        "`.keras` model and `.npz` stats"
+      ],
+      "outputs": [
+        "Console prediction, optional quantile distribution"
+      ],
+      "dependencies": [
+        "pandas/numpy/tensorflow"
+      ]
+    },
+    {
+      "path": "model_layers.py",
+      "purpose": "Custom layers: RevIN, DropPath, ITransformerBlock, TSMixerBlock, LastStep.",
+      "key_functions": [
+        "RevIN.call",
+        "ITransformerBlock.build/call",
+        "DropPath.call"
+      ],
+      "inputs": [
+        "TF tensors"
+      ],
+      "outputs": [
+        "Transformed hidden states for train/inference"
+      ],
+      "dependencies": [
+        "tensorflow.keras.layers"
+      ]
+    },
+    {
+      "path": "trading_keras_core.py",
+      "purpose": "Feature schema + dataset builders + helper blocks used by training/eval/inference.",
+      "key_functions": [
+        "default_feature_list",
+        "add_time_features",
+        "build_target",
+        "make_tf_dataset"
+      ],
+      "inputs": [
+        "DataFrame of features + targets"
+      ],
+      "outputs": [
+        "Normalized feature arrays",
+        "tf.data.Dataset windows"
+      ],
+      "dependencies": [
+        "numpy/pandas/tensorflow"
+      ]
+    },
+    {
+      "path": "html/aladin_from_image.html",
+      "purpose": "Frontend макет сайта с Lightweight Charts, news панелью и кнопками timeframes.",
+      "key_functions": [
+        "init LightweightCharts",
+        "fetch `/forecast` & `/forecast_multi`",
+        "manage UI hotspots (per `chat_summary.pdf`)"
+      ],
+      "inputs": [
+        "forecast APIs
+
+5) CHAT_SUMMARY.PDF (UI RULES AND HOTSPOTS)
+
+CHAT SUMMARY (model6)
+Project paths:
+- Workdir: /home/vitamind/my_project/model6
+- HTML assets in: /home/vitamind/my_project/model6/html
+- Main file (do not redesign): html/aladin_from_image.html
+- Background image: html/Pasted image.png
+- Local chart library: html/lightweight-charts.standalone.production.js
+- News file: html/fed_events.json
+Overlay rules:
+- All overlays must be inside #mockWrap (position: relative).
+- Coordinates use percentages only, via CSS vars (no vh/vw, no body positioning).
+- Hotspot template:
+position:absolute; left:calc(var(--x)*1%); top:calc(var(--y)*1%);
+transform:translate(-50%,-50%);
+Chart requirements:
+- Use Lightweight Charts (not TradingView widget).
+- Show ~1 year of data; current price label must be current.
+- Timeframes 15m/1h/4h/1d must be active buttons (yellow highlight on click).
+- Fix JS errors: addCandlestickSeries not a function, duplicate variable names.
+- Sessions: vertical dashed lines for NY/Asia/Europe/China.
+- News dots: yellow circles on chart; hover/click shows news in bottom panel.
+Key hotspot coords (percent, inside #mockWrap):
+Timeframe row:
+- 15m updated: (33.49, 17.21) to (38.87, 20.17)
+- Align BTCUSDT to y=17.20
+Extra hour buttons row (1h/3h/4h/6h/12h):
+- Left bound ~x=4.96 at y41.4
+- Right bound ~x=20.08 at y45.56
+- Evenly distribute 5 buttons within this rectangle
+- Same size/style as upper buttons
+Predict button:
+- Rectangle (19.95, 45.75) -> label ———¿—” —¿——·—”——•——‰—‚ ——‰
+Metrics button:
+- Use existing unlabeled button within rectangle (4.51, 25.38) to (19.87, 30.74)
+- Label: ———‚—”—‚ —…——·——»—‚
+- Do NOT rename Predict; remove duplicates
+Black background rectangles (solid black fill):
+- Top bar: (20.80, 15.41) to (96.23, 21.63)
+- Bottom band: (20.80, 68.03) to (96.30, 84.11)
+- News area: (20.77, 68.06) to (56.75, 84.19)
+- Another: (20.74, 67.86) to (56.65, 83.74)
+Buttons hover/click:
+- Hover: highlight yellow.
+- Click: toggle active (yellow).
+Recent issues observed:
+- Chart sometimes disappears due to JS errors (duplicate vars like lastTs/daySecs).
+- Need stable chart viewport (dont jump on refresh).
+- For Binance fetch in console, use proper JS syntax.
+
+6) DIRECTORY MAP (FOLDERS AND PURPOSES)
+
+- .kaggle/  (files: 1)
+- .venv/  (files: 65870)
+- __pycache__/  (files: 7)
+- backend/  (files: 1)
+- best/  (files: 47)
+- bin/  (files: 1)
+- data/  (files: 1627)
+- html/  (files: 15)
+- logs/  (files: 50)
+- model_1m/  (files: 3)
+- models/  (files: 22)
+- new_models/  (files: 25)
+- reports/  (files: 244)
+- scripts/  (files: 31)
+
+6.1) FOLDER DETAILS (SELECTED CONTENTS)
+
+data/:
+  files: BTCUSDT_10m.parquet, BTCUSDT_15m.parquet, BTCUSDT_15m_aux.parquet, BTCUSDT_15m_features.parquet, BTCUSDT_15m_features_aux.parquet, BTCUSDT_15m_features_h20.parquet, BTCUSDT_15m_features_h20_tb.parquet, BTCUSDT_15m_features_h20_v2.parquet, BTCUSDT_15m_features_h20_v2_h640.parquet, BTCUSDT_15m_features_h20_v2_h640_serve.parquet, BTCUSDT_15m_features_h20_v2_news.parquet, BTCUSDT_15m_features_h20_v2_news_serve.parquet, BTCUSDT_15m_features_h20_v2_news_xlmr.parquet, BTCUSDT_15m_features_h20_v2_news_xlmr_serve.parquet, BTCUSDT_15m_features_h20_v2_news_xlmr_v2.parquet, BTCUSDT_15m_features_h20_v2_news_xlmr_v2_serve.parquet, BTCUSDT_15m_features_h20_v2_news_xlmr_v3.parquet, BTCUSDT_15m_features_h20_v2_news_xlmr_v3_serve.parquet, BTCUSDT_15m_features_h20_v2_news_xlmr_v4_8nodes.parquet, BTCUSDT_15m_features_h20_v2_news_xlmr_v4_8nodes_serve.parquet, BTCUSDT_15m_features_h20_v2_serve.parquet, BTCUSDT_15m_features_h20_vf.parquet, BTCUSDT_15m_features_h20_vf03.parquet, BTCUSDT_15m_features_h20_vf2.parquet, BTCUSDT_15m_features_tb.parquet
+  subdirs: binance_cache, liquidations, metrics, news
+
+html/:
+  files: Pasted image.png, aladin_from_image.html, aladin_mock.html, aladin_mock_1to1.html, aladin_mock_annotated.html, fed_events.json, forecast_itransformer_24h.csv, index.html, lightweight-charts.standalone.production.js, styles.css
+  subdirs: models
+
+scripts/:
+  files: auto_shutdown_after_ccnews.sh, benchmark_compare.sh, build_features_news_xlmr_v2.sh, build_features_news_xlmr_v3.sh, build_features_news_xlmr_v4_8nodes.sh, cc_news_pipeline.py, eval_news_xlmr_v2.sh, eval_price_quality.py, eval_price_quality_ensemble.py, fetch_bitmex_liquidations.py, fetch_bybit_liquidations.py, generate_project_report.py, live_update_loop.sh, live_update_once.sh, news_dedup.py, news_ingest.py, news_sentiment_hf.py, run_live_site.sh, run_servers.sh, smoke_forecast.py, start_public.sh, train_news_models.sh, train_news_xlmr_cosmic.sh, train_news_xlmr_cosmic_v3.sh, train_news_xlmr_cosmic_v4_pw.sh, train_news_xlmr_cosmic_v5_dr_scale.sh, train_news_xlmr_cosmic_v6_dr_scale_8nodes.sh, train_news_xlmr_models.sh, train_v6_8nodes_docker.sh, update_fed_events.sh, update_ohlcv_and_features.sh
+
+reports/:
+  files: battle_equity.csv, battle_sanity_equity.csv, battle_smooth_band_equity.csv, battle_smooth_band_v2_equity.csv, battle_smooth_band_v3_equity.csv, compare_all.csv, feature_cols_battle.txt, feature_selection_battle.csv, itransformer_2025_equity.csv, itransformer_2025_equity.png, itransformer_2025_trades_readable.png, itransformer_conservative_2024_2025.log, itransformer_h20_moderate_plus_2024_2025.log, itransformer_moderate_plus.log, itransformer_moderate_plus_2024_2025.log, itransformer_moretrades.log, itransformer_moretrades_ddreset_equity.csv, itransformer_moretrades_ddreset_monthly.csv, itransformer_moretrades_ddreset_monthly_zoom.png, itransformer_moretrades_ddreset_trades.png, itransformer_moretrades_equity.csv, itransformer_soft.log, itransformer_vf_h20_equity.csv, moderate_run.log, opt_thr0.65_h2_cd1_vb2.0.csv, opt_thr0.65_h2_cd1_vb2.5.csv, opt_thr0.65_h2_cd1_vb3.0.csv, opt_thr0.65_h2_cd2_vb2.0.csv, opt_thr0.65_h2_cd2_vb2.5.csv, opt_thr0.65_h2_cd2_vb3.0.csv, opt_thr0.65_h2_cd3_vb2.0.csv, opt_thr0.65_h2_cd3_vb2.5.csv, opt_thr0.65_h2_cd3_vb3.0.csv, opt_thr0.65_h4_cd1_vb2.0.csv, opt_thr0.65_h4_cd1_vb2.5.csv, opt_thr0.65_h4_cd1_vb3.0.csv, opt_thr0.65_h4_cd2_vb2.0.csv, opt_thr0.65_h4_cd2_vb2.5.csv, opt_thr0.65_h4_cd2_vb3.0.csv, opt_thr0.65_h4_cd3_vb2.0.csv, opt_thr0.65_h4_cd3_vb2.5.csv, opt_thr0.65_h4_cd3_vb3.0.csv, opt_thr0.65_h6_cd1_vb2.0.csv, opt_thr0.65_h6_cd1_vb2.5.csv, opt_thr0.65_h6_cd1_vb3.0.csv, opt_thr0.65_h6_cd2_vb2.0.csv, opt_thr0.65_h6_cd2_vb2.5.csv, opt_thr0.65_h6_cd2_vb3.0.csv, opt_thr0.65_h6_cd3_vb2.0.csv, opt_thr0.65_h6_cd3_vb2.5.csv, opt_thr0.65_h6_cd3_vb3.0.csv, opt_thr0.70_h2_cd1_vb2.0.csv, opt_thr0.70_h2_cd1_vb2.5.csv, opt_thr0.70_h2_cd1_vb3.0.csv, opt_thr0.70_h2_cd2_vb2.0.csv, opt_thr0.70_h2_cd2_vb2.5.csv, opt_thr0.70_h2_cd2_vb3.0.csv, opt_thr0.70_h2_cd3_vb2.0.csv, opt_thr0.70_h2_cd3_vb2.5.csv, opt_thr0.70_h2_cd3_vb3.0.csv, opt_thr0.70_h4_cd1_vb2.0.csv, opt_thr0.70_h4_cd1_vb2.5.csv, opt_thr0.70_h4_cd1_vb3.0.csv, opt_thr0.70_h4_cd2_vb2.0.csv, opt_thr0.70_h4_cd2_vb2.5.csv, opt_thr0.70_h4_cd2_vb3.0.csv, opt_thr0.70_h4_cd3_vb2.0.csv, opt_thr0.70_h4_cd3_vb2.5.csv, opt_thr0.70_h4_cd3_vb3.0.csv, opt_thr0.70_h6_cd1_vb2.0.csv, opt_thr0.70_h6_cd1_vb2.5.csv, opt_thr0.70_h6_cd1_vb3.0.csv, opt_thr0.70_h6_cd2_vb2.0.csv, opt_thr0.70_h6_cd2_vb2.5.csv, opt_thr0.70_h6_cd2_vb3.0.csv, opt_thr0.70_h6_cd3_vb2.0.csv, opt_thr0.70_h6_cd3_vb2.5.csv, opt_thr0.70_h6_cd3_vb3.0.csv, opt_thr0.75_h2_cd1_vb2.0.csv, opt_thr0.75_h2_cd1_vb2.5.csv
+
+new_models/:
+  experiment folders: 2026-01-13_multiclass_news, 2026-01-13_news_xlmr_v2, 2026-01-13_news_xlmr_v3, 2026-01-14_news_xlmr_v4_priceweight, 2026-01-14_news_xlmr_v5_dr_scale, 2026-01-14_news_xlmr_v6_dr_scale_8nodes, legacy_exports
+
+7) KEY FILES AND WHAT THEY DO (SELECTED)
+
+- build_features.py: core feature engineering (OHLCV + aux + TA + liq + news).
+- train_keras.py: training runner (itransformer/patchtst/tsmixer; cls+price heads; losses).
+- walk_forward_eval.py: walk-forward trading evaluation with fee/slippage/risk controls.
+- serve_fastapi.py: FastAPI server; endpoints /forecast /forecast_multi /news /news_agg.
+- html/aladin_from_image.html: UI (Lightweight Charts), forecast buttons, news panel.
+- scripts/run_servers.sh: start FastAPI + UI server; selects latest features and models.
+- scripts/run_live_site.sh: starts periodic live updates + run_servers.sh.
+- scripts/live_update_once.sh: pulls news + sentiment, updates OHLCV, rebuilds features.
+
+8) FRONTEND DETAILS (html/aladin_from_image.html)
+
+Key behaviors extracted from JS:
+- Uses Binance REST klines for candles (interval buttons 15m/1h/4h/1d).
+- API_BASE is http://localhost:8000 (FastAPI).
+- Forecast endpoints: /forecast?interval=h20 and /forecast_multi?interval=h80/h160.
+- UI flow: PREDICT button must be pressed → horizon button → ПРОГНОЗ.
+- Forecast alignment: shifts time to last candle and scales price to last close if provided by backend.
+- Zigzag render-test: if line is flat or render_test=1, creates synthetic zigzag line for debugging.
+- Sessions overlay: vertical dashed lines for China/Europe/New York at UTC hours.
+- News panel: fetches /news?limit=30 and renders list items.
+
+9) BACKEND DETAILS (serve_fastapi.py)
+
+Endpoints (from serve_fastapi.py):
+- GET /health
+- POST /predict
+- POST /predict_batch
+- GET /forecast
+- GET /forecast_multi
+- GET /liquidations
+- GET /news
+- GET /news_agg
+- GET /forecast.csv
+Notes: uses custom layers RevIN/TSMixer/ITransformer/DropPath; supports Keras3 loader via USE_KERAS3=1.
+
+10) NEWS PIPELINE (INGEST → SENTIMENT → FEATURES)
+
+- scripts/news_ingest.py: pulls CryptoPanic/CryptoCompare/CoinMarketCal; merges into parquet.
+- scripts/news_dedup.py: deduplicates news files.
+- scripts/news_sentiment_hf.py: HuggingFace sentiment (LedgerBERT + XLM-R).
+- data/news/*.parquet: persistent news store and sentiment cache.
+- models/twitter-xlmr-sentiment: local cached HF model snapshot (for offline use).
+
+11) LIVE UPDATE PIPELINE (AUTO REFRESH)
+
+- scripts/live_update_once.sh:
+  1) ingest news → dedup → sentiment (requires XLM-R + LedgerBERT)
+  2) update OHLCV via bybit_data.py
+  3) rebuild features with news windows and multi-horizons 20..160
+- scripts/live_update_loop.sh: runs live_update_once.sh every 60s (lock file).
+- scripts/run_live_site.sh: starts live_update loop + run_servers.sh.
+
+12) MODELS AND EXPERIMENTS
+
+Key production/battle models (from project context):
+- model_battle_itransformer.keras + norm_stats_battle_itransformer.npz (h20 / 5h).
+- model_15m_itransformer_tb_multi.keras + norm_stats_15m_itransformer_tb_multi.npz (multi h20/80/160).
+New experiment folders (new_models/):
+  2026-01-13_multiclass_news, 2026-01-13_news_xlmr_v2, 2026-01-13_news_xlmr_v3, 2026-01-14_news_xlmr_v4_priceweight, 2026-01-14_news_xlmr_v5_dr_scale, 2026-01-14_news_xlmr_v6_dr_scale_8nodes, legacy_exports
+Current configured serve model (scripts/run_servers.sh):
+- v6 8-node model: new_models/2026-01-14_news_xlmr_v6_dr_scale_8nodes/...
+
+13) KEY METRICS (FROM reports/ WALK-FORWARD CSVs)
+
+wf_tb.csv:
+  model: tb_itransformer
+  sharpe: 6.298709451255016
+  max_dd: -0.9245069444883873
+  total_return: 33.79130627793297
+  cagr: 39.96193892017521
+  threshold: 0.77
+  short_threshold: 0.22999999999999998
+  fee_bps: 2.0
+  slip_bps: 2.0
+  min_hold: 6
+  cooldown: 2
+  max_trades_per_day: 40
+  n_trades: 76
+  n_samples: 33499
+wf_battle.csv:
+  model: battle_itransformer_sharpe
+  sharpe: 0.5509478012976817
+  max_dd: -0.01656554479798467
+  total_return: 0.00978733340667337
+  cagr: 0.009924229473816881
+  threshold: 0.6000000000000001
+  short_threshold: 0.3999999999999999
+  fee_bps: 2.0
+  slip_bps: 2.0
+  min_hold: 2
+  cooldown: 1
+  max_trades_per_day: 120
+  n_trades: 42
+  n_samples: 34559
+wf_itransformer_moderate_plus.csv:
+  model: itransformer_moderate_plus
+  sharpe: 3.555980139827747
+  max_dd: -0.32122248065426856
+  total_return: 0.9097904349235899
+  cagr: 0.9658976865236863
+  threshold: 0.66
+  short_threshold: 0.33999999999999997
+  fee_bps: 2.0
+  slip_bps: 2.0
+  min_hold: 2
+  cooldown: 1
+  max_trades_per_day: 120
+  n_trades: 30
+  n_samples: 33539
+
+14) LOSSES AND OBJECTIVES (train_keras.py)
+
+Classification: BCE or Focal loss (focal-alpha, focal-gamma).
+Regression: Huber (default), MSE, MAE, LogCosh. Optional quantile pinball loss if --quantiles used.
+Price heads: can be single price or multi-horizon price heads (price_h20/price_h80/...).
+Normalization/clipping: q_low/q_high for target clipping; stats saved in norm_stats_*.npz.
+
+15) ERRORS ENCOUNTERED (FROM LOGS) AND HOW WE MITIGATED
+
+FastAPI/Keras3 load errors (logs/fastapi.log):
+/home/vitamind/my_project/model6/serve_fastapi.py:62: PydanticDeprecatedSince20: Pydantic V1 style
+`@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators,
+see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2
+Migration Guide at https://errors.pydantic.dev/2.12/migration/
+Traceback (most recent call last):
+    raise TypeError(
+TypeError: Could not locate class 'Functional'. Make sure custom classes and functions are decorated with
+`@keras.saving.register_keras_serializable()`. If they are already decorated, make sure they are all imported
+so that the decorator is run before trying to load them. Full object config: {'module':
+'tf_keras.src.engine.functional', 'class_name': 'Functional', 'config': {'name': 'model', 'trainable': True,
+'layers': [{'module': 'keras.layers', 'class_name': 'InputLayer', 'config': {'batch_input_shape': [None, 512,
+45], 'dtype': 'float32', 'sparse': False, 'ragged': False, 'name': 'x'}, 'registered_name': None, 'name': 'x',
+'inbound_nodes': []}, {'module': 'model_layers', 'class_name': 'RevIN', 'config': {'affine': True, 'eps':
+1e-05}, 'registered_name': 'model6>RevIN', 'build_config': {'input_shape': [None, 512, 45]}, 'name': 'rev_in',
+'inbound_nodes': [[['x', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name': 'SpatialDropout1D', 'config':
+{'name': 'spatial_dropout1d', 'trainable': True, 'dtype': 'float32', 'rate': 0.05, 'noise_shape': None,
+'seed': None}, 'registered_name': None, 'build_config': {'input_shape': [None, 512, 45]}, 'name':
+'spatial_dropout1d', 'inbound_nodes': [[['rev_in', 0, 0, {}]]]}, {'module': 'model_layers', 'class_name':
+'ITransformerBlock', 'config': {'seq_len': 512, 'd_model': 192, 'heads': 6, 'dropout': 0.05},
+'registered_name': 'model6>ITransformerBlock', 'build_config': {'input_shape': [None, 512, 45]}, 'name':
+'i_transformer_block', 'inbound_nodes': [[['spatial_dropout1d', 0, 0, {}]]]}, {'module': 'model_layers',
+'class_name': 'ITransformerBlock', 'config': {'seq_len': 512, 'd_model': 192, 'heads': 6, 'dropout': 0.05},
+'registered_name': 'model6>ITransformerBlock', 'build_config': {'input_shape': [None, 512, 45]}, 'name':
+'i_transformer_block_1', 'inbound_nodes': [[['i_transformer_block', 0, 0, {}]]]}, {'module': 'keras.layers',
+'class_name': 'Dense', 'config': {'name': 'dense', 'trainable': True, 'dtype': 'float32', 'units': 192,
+'activation': 'linear', 'use_bias': True, 'kernel_initializer': {'module': 'keras.initializers', 'class_name':
+'GlorotUniform', 'config': {'seed': None}, 'registered_name': None}, 'bias_initializer': {'module':
+'keras.initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name': None}, 'kernel_regularizer':
+None, 'bias_regularizer': None, 'activity_regularizer': None, 'kernel_constraint': None, 'bias_constraint':
+None}, 'registered_name': None, 'build_config': {'input_shape': [None, 512, 45]}, 'name': 'dense',
+'inbound_nodes': [[['i_transformer_block_1', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name':
+'LayerNormalization', 'config': {'name': 'layer_normalization_4', 'trainable': True, 'dtype': 'float32',
+'axis': [2], 'epsilon': 1e-05, 'center': True, 'scale': True, 'beta_initializer': {'module':
+'keras.initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name': None}, 'gamma_initializer':
+{'module': 'keras.initializers', 'class_name': 'Ones', 'config': {}, 'registered_name': None},
+'beta_regularizer': None, 'gamma_regularizer': None, 'beta_constraint': None, 'gamma_constraint': None},
+'registered_name': None, 'build_config': {'input_shape': [None, 512, 192]}, 'name': 'layer_normalization_4',
+'inbound_nodes': [[['dense', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name': 'MultiHeadAttention',
+'config': {'name': 'multi_head_attention', 'trainable': True, 'dtype': 'float32', 'num_heads': 6, 'key_dim':
+32, 'value_dim': 32, 'dropout': 0.05, 'use_bias': True, 'output_shape': None, 'attention_axes': [1],
+'kernel_initializer': {'module': 'keras.initializers', 'class_name': 'GlorotUniform', 'config': {'seed':
+None}, 'registered_name': None}, 'bias_initializer': {'module': 'keras.initializers', 'class_name': 'Zeros',
+'config': {}, 'registered_name': None}, 'kernel_regularizer': None, 'bias_regularizer': None,
+'activity_regularizer': None, 'kernel_constraint': None, 'bias_constraint': None, 'query_shape': [None, 512,
+192], 'key_shape': [None, 512, 192], 'value_shape': [None, 512, 192]}, 'registered_name': None,
+'build_config': {'input_shape': [None, 512, 192]}, 'name': 'multi_head_attention', 'inbound_nodes':
+[[['layer_normalization_4', 0, 0, {'value': ['layer_normalization_4', 0, 0]}]]]}, {'module': 'keras.layers',
+'class_name': 'Dropout', 'config': {'name': 'dropout', 'trainable': True, 'dtype': 'float32', 'rate': 0.05,
+'noise_shape': None, 'seed': None}, 'registered_name': None, 'build_config': {'input_shape': [None, 512,
+192]}, 'name': 'dropout', 'inbound_nodes': [[['multi_head_attention', 0, 0, {}]]]}, {'module': None,
+'class_name': 'DropPath', 'config': {'name': 'drop_path', 'trainable': True, 'dtype': 'float32', 'drop_prob':
+0.0}, 'registered_name': 'DropPath', 'build_config': {'input_shape': [None, 512, 192]}, 'name': 'drop_path',
+'inbound_nodes': [[['dropout', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name': 'Add', 'config':
+{'name': 'add', 'trainable': True, 'dtype': 'float32'}, 'registered_name': None, 'build_config':
+{'input_shape': [[None, 512, 192], [None, 512, 192]]}, 'name': 'add', 'inbound_nodes': [[['dense', 0, 0, {}],
+['drop_path', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name': 'LayerNormalization', 'config': {'name':
+'layer_normalization_5', 'trainable': True, 'dtype': 'float32', 'axis': [2], 'epsilon': 1e-05, 'center': True,
+'scale': True, 'beta_initializer': {'module': 'keras.initializers', 'class_name': 'Zeros', 'config': {},
+'registered_name': None}, 'gamma_initializer': {'module': 'keras.initializers', 'class_name': 'Ones',
+'config': {}, 'registered_name': None}, 'beta_regularizer': None, 'gamma_regularizer': None,
+'beta_constraint': None, 'gamma_constraint': None}, 'registered_name': None, 'build_config': {'input_shape':
+[None, 512, 192]}, 'name': 'layer_normalization_5', 'inbound_nodes': [[['add', 0, 0, {}]]]}, {'module':
+'keras.layers', 'class_name': 'Dense', 'config': {'name': 'dense_1', 'trainable': True, 'dtype': 'float32',
+'units': 768, 'activation': 'gelu', 'use_bias': True, 'kernel_initializer': {'module': 'keras.initializers',
+'class_name': 'GlorotUniform', 'config': {'seed': None}, 'registered_name': None}, 'bias_initializer':
+{'module': 'keras.initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name': None},
+'kernel_regularizer': None, 'bias_regularizer': None, 'activity_regularizer': None, 'kernel_constraint': None,
+'bias_constraint': None}, 'registered_name': None, 'build_config': {'input_shape': [None, 512, 192]}, 'name':
+'dense_1', 'inbound_nodes': [[['layer_normalization_5', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name':
+'Dropout', 'config': {'name': 'dropout_1', 'trainable': True, 'dtype': 'float32', 'rate': 0.05, 'noise_shape':
+None, 'seed': None}, 'registered_name': None, 'build_config': {'input_shape': [None, 512, 768]}, 'name':
+'dropout_1', 'inbound_nodes': [[['dense_1', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name': 'Dense',
+'config': {'name': 'dense_2', 'trainable': True, 'dtype': 'float32', 'units': 192, 'activation': 'linear',
+'use_bias': True, 'kernel_initializer': {'module': 'keras.initializers', 'class_name': 'GlorotUniform',
+'config': {'seed': None}, 'registered_name': None}, 'bias_initializer': {'module': 'keras.initializers',
+'class_name': 'Zeros', 'config': {}, 'registered_name': None}, 'kernel_regularizer': None, 'bias_regularizer':
+None, 'activity_regularizer': None, 'kernel_constraint': None, 'bias_constraint': None}, 'registered_name':
+None, 'build_config': {'input_shape': [None, 512, 768]}, 'name': 'dense_2', 'inbound_nodes': [[['dropout_1',
+0, 0, {}]]]}, {'module': 'keras.layers', 'class_name': 'Dropout', 'config': {'name': 'dropout_2', 'trainable':
+True, 'dtype': 'float32', 'rate': 0.05, 'noise_shape': None, 'seed': None}, 'registered_name': None,
+'build_config': {'input_shape': [None, 512, 192]}, 'name': 'dropout_2', 'inbound_nodes': [[['dense_2', 0, 0,
+{}]]]}, {'module': None, 'class_name': 'DropPath', 'config': {'name': 'drop_path_1', 'trainable': True,
+'dtype': 'float32', 'drop_prob': 0.0}, 'registered_name': 'DropPath', 'build_config': {'input_shape': [None,
+512, 192]}, 'name': 'drop_path_1', 'inbound_nodes': [[['dropout_2', 0, 0, {}]]]}, {'module': 'keras.layers',
+'class_name': 'Add', 'config': {'name': 'add_1', 'trainable': True, 'dtype': 'float32'}, 'registered_name':
+None, 'build_config': {'input_shape': [[None, 512, 192], [None, 512, 192]]}, 'name': 'add_1', 'inbound_nodes':
+[[['add', 0, 0, {}], ['drop_path_1', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name':
+'LayerNormalization', 'config': {'name': 'layer_normalization_6', 'trainable': True, 'dtype': 'float32',
+'axis': [2], 'epsilon': 1e-05, 'center': True, 'scale': True, 'beta_initializer': {'module':
+'keras.initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name': None}, 'gamma_initializer':
+{'module': 'keras.initializers', 'class_name': 'Ones', 'config': {}, 'registered_name': None},
+'beta_regularizer': None, 'gamma_regularizer': None, 'beta_constraint': None, 'gamma_constraint': None},
+'registered_name': None, 'build_config': {'input_shape': [None, 512, 192]}, 'name': 'layer_normalization_6',
+'inbound_nodes': [[['add_1', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name': 'MultiHeadAttention',
+'config': {'name': 'multi_head_attention_1', 'trainable': True, 'dtype': 'float32', 'num_heads': 6, 'key_dim':
+32, 'value_dim': 32, 'dropout': 0.05, 'use_bias': True, 'output_shape': None, 'attention_axes': [1],
+'kernel_initializer': {'module': 'keras.initializers', 'class_name': 'GlorotUniform', 'config': {'seed':
+None}, 'registered_name': None}, 'bias_initializer': {'module': 'keras.initializers', 'class_name': 'Zeros',
+'config': {}, 'registered_name': None}, 'kernel_regularizer': None, 'bias_regularizer': None,
+'activity_regularizer': None, 'kernel_constraint': None, 'bias_constraint': None, 'query_shape': [None, 512,
+192], 'key_shape': [None, 512, 192], 'value_shape': [None, 512, 192]}, 'registered_name': None,
+'build_config': {'input_shape': [None, 512, 192]}, 'name': 'multi_head_attention_1', 'inbound_nodes':
+[[['layer_normalization_6', 0, 0, {'value': ['layer_normalization_6', 0, 0]}]]]}, {'module': 'keras.layers',
+'class_name': 'Dropout', 'config': {'name': 'dropout_3', 'trainable': True, 'dtype': 'float32', 'rate': 0.05,
+'noise_shape': None, 'seed': None}, 'registered_name': None, 'build_config': {'input_shape': [None, 512,
+192]}, 'name': 'dropout_3', 'inbound_nodes': [[['multi_head_attention_1', 0, 0, {}]]]}, {'module': None,
+'class_name': 'DropPath', 'config': {'name': 'drop_path_2', 'trainable': True, 'dtype': 'float32',
+'drop_prob': 0.05}, 'registered_name': 'DropPath', 'build_config': {'input_shape': [None, 512, 192]}, 'name':
+'drop_path_2', 'inbound_nodes': [[['dropout_3', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name': 'Add',
+'config': {'name': 'add_2', 'trainable': True, 'dtype': 'float32'}, 'registered_name': None, 'build_config':
+{'input_shape': [[None, 512, 192], [None, 512, 192]]}, 'name': 'add_2', 'inbound_nodes': [[['add_1', 0, 0,
+{}], ['drop_path_2', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name': 'LayerNormalization', 'config':
+{'name': 'layer_normalization_7', 'trainable': True, 'dtype': 'float32', 'axis': [2], 'epsilon': 1e-05,
+'center': True, 'scale': True, 'beta_initializer': {'module': 'keras.initializers', 'class_name': 'Zeros',
+'config': {}, 'registered_name': None}, 'gamma_initializer': {'module': 'keras.initializers', 'class_name':
+'Ones', 'config': {}, 'registered_name': None}, 'beta_regularizer': None, 'gamma_regularizer': None,
+'beta_constraint': None, 'gamma_constraint': None}, 'registered_name': None, 'build_config': {'input_shape':
+[None, 512, 192]}, 'name': 'layer_normalization_7', 'inbound_nodes': [[['add_2', 0, 0, {}]]]}, {'module':
+'keras.layers', 'class_name': 'Dense', 'config': {'name': 'dense_3', 'trainable': True, 'dtype': 'float32',
+'units': 768, 'activation': 'gelu', 'use_bias': True, 'kernel_initializer': {'module': 'keras.initializers',
+'class_name': 'GlorotUniform', 'config': {'seed': None}, 'registered_name': None}, 'bias_initializer':
+{'module': 'keras.initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name': None},
+'kernel_regularizer': None, 'bias_regularizer': None, 'activity_regularizer': None, 'kernel_constraint': None,
+'bias_constraint': None}, 'registered_name': None, 'build_config': {'input_shape': [None, 512, 192]}, 'name':
+'dense_3', 'inbound_nodes': [[['layer_normalization_7', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name':
+'Dropout', 'config': {'name': 'dropout_4', 'trainable': True, 'dtype': 'float32', 'rate': 0.05, 'noise_shape':
+None, 'seed': None}, 'registered_name': None, 'build_config': {'input_shape': [None, 512, 768]}, 'name':
+'dropout_4', 'inbound_nodes': [[['dense_3', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name': 'Dense',
+'config': {'name': 'dense_4', 'trainable': True, 'dtype': 'float32', 'units': 192, 'activation': 'linear',
+'use_bias': True, 'kernel_initializer': {'module': 'keras.initializers', 'class_name': 'GlorotUniform',
+'config': {'seed': None}, 'registered_name': None}, 'bias_initializer': {'module': 'keras.initializers',
+'class_name': 'Zeros', 'config': {}, 'registered_name': None}, 'kernel_regularizer': None, 'bias_regularizer':
+None, 'activity_regularizer': None, 'kernel_constraint': None, 'bias_constraint': None}, 'registered_name':
+None, 'build_config': {'input_shape': [None, 512, 768]}, 'name': 'dense_4', 'inbound_nodes': [[['dropout_4',
+0, 0, {}]]]}, {'module': 'keras.layers', 'class_name': 'Dropout', 'config': {'name': 'dropout_5', 'trainable':
+True, 'dtype': 'float32', 'rate': 0.05, 'noise_shape': None, 'seed': None}, 'registered_name': None,
+'build_config': {'input_shape': [None, 512, 192]}, 'name': 'dropout_5', 'inbound_nodes': [[['dense_4', 0, 0,
+{}]]]}, {'module': None, 'class_name': 'DropPath', 'config': {'name': 'drop_path_3', 'trainable': True,
+'dtype': 'float32', 'drop_prob': 0.05}, 'registered_name': 'DropPath', 'build_config': {'input_shape': [None,
+512, 192]}, 'name': 'drop_path_3', 'inbound_nodes': [[['dropout_5', 0, 0, {}]]]}, {'module': 'keras.layers',
+'class_name': 'Add', 'config': {'name': 'add_3', 'trainable': True, 'dtype': 'float32'}, 'registered_name':
+None, 'build_config': {'input_shape': [[None, 512, 192], [None, 512, 192]]}, 'name': 'add_3', 'inbound_nodes':
+[[['add_2', 0, 0, {}], ['drop_path_3', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name':
+'GlobalAveragePooling1D', 'config': {'name': 'global_average_pooling1d', 'trainable': True, 'dtype':
+'float32', 'data_format': 'channels_last', 'keepdims': False}, 'registered_name': None, 'build_config':
+{'input_shape': [None, 512, 192]}, 'name': 'global_average_pooling1d', 'inbound_nodes': [[['add_3', 0, 0,
+{}]]]}, {'module': 'keras.layers', 'class_name': 'GlobalMaxPooling1D', 'config': {'name':
+'global_max_pooling1d', 'trainable': True, 'dtype': 'float32', 'data_format': 'channels_last', 'keepdims':
+False}, 'registered_name': None, 'build_config': {'input_shape': [None, 512, 192]}, 'name':
+'global_max_pooling1d', 'inbound_nodes': [[['add_3', 0, 0, {}]]]}, {'module': 'model_layers', 'class_name':
+'LastStep', 'config': {'name': 'last_step', 'trainable': True, 'dtype': 'float32'}, 'registered_name':
+'model6>LastStep', 'build_config': {'input_shape': [None, 512, 192]}, 'name': 'last_step', 'inbound_nodes':
+[[['add_3', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name': 'Concatenate', 'config': {'name':
+'concatenate', 'trainable': True, 'dtype': 'float32', 'axis': -1}, 'registered_name': None, 'build_config':
+{'input_shape': [[None, 192], [None, 192], [None, 192]]}, 'name': 'concatenate', 'inbound_nodes':
+[[['global_average_pooling1d', 0, 0, {}], ['global_max_pooling1d', 0, 0, {}], ['last_step', 0, 0, {}]]]},
+{'module': 'keras.layers', 'class_name': 'Dense', 'config': {'name': 'dense_5', 'trainable': True, 'dtype':
+'float32', 'units': 192, 'activation': 'gelu', 'use_bias': True, 'kernel_initializer': {'module':
+'keras.initializers', 'class_name': 'GlorotUniform', 'config': {'seed': None}, 'registered_name': None},
+'bias_initializer': {'module': 'keras.initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name':
+None}, 'kernel_regularizer': None, 'bias_regularizer': None, 'activity_regularizer': None,
+'kernel_constraint': None, 'bias_constraint': None}, 'registered_name': None, 'build_config': {'input_shape':
+[None, 576]}, 'name': 'dense_5', 'inbound_nodes': [[['concatenate', 0, 0, {}]]]}, {'module': 'keras.layers',
+'class_name': 'Dropout', 'config': {'name': 'dropout_6', 'trainable': True, 'dtype': 'float32', 'rate': 0.05,
+'noise_shape': None, 'seed': None}, 'registered_name': None, 'build_config': {'input_shape': [None, 192]},
+'name': 'dropout_6', 'inbound_nodes': [[['dense_5', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name':
+'Dense', 'config': {'name': 'cls', 'trainable': True, 'dtype': 'float32', 'units': 1, 'activation': 'sigmoid',
+'use_bias': True, 'kernel_initializer': {'module': 'keras.initializers', 'class_name': 'GlorotUniform',
+'config': {'seed': None}, 'registered_name': None}, 'bias_initializer': {'module': 'keras.initializers',
+'class_name': 'Zeros', 'config': {}, 'registered_name': None}, 'kernel_regularizer': None, 'bias_regularizer':
+None, 'activity_regularizer': None, 'kernel_constraint': None, 'bias_constraint': None}, 'registered_name':
+None, 'build_config': {'input_shape': [None, 192]}, 'name': 'cls', 'inbound_nodes': [[['dropout_6', 0, 0,
+{}]]]}, {'module': 'keras.layers', 'class_name': 'Dense', 'config': {'name': 'price_h100', 'trainable': True,
+'dtype': 'float32', 'units': 1, 'activation': 'linear', 'use_bias': True, 'kernel_initializer': {'module':
+'keras.initializers', 'class_name': 'GlorotUniform', 'config': {'seed': None}, 'registered_name': None},
+'bias_initializer': {'module': 'keras.initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name':
+None}, 'kernel_regularizer': None, 'bias_regularizer': None, 'activity_regularizer': None,
+'kernel_constraint': None, 'bias_constraint': None}, 'registered_name': None, 'build_config': {'input_shape':
+[None, 192]}, 'name': 'price_h100', 'inbound_nodes': [[['dropout_6', 0, 0, {}]]]}, {'module': 'keras.layers',
+'class_name': 'Dense', 'config': {'name': 'price_h120', 'trainable': True, 'dtype': 'float32', 'units': 1,
+'activation': 'linear', 'use_bias': True, 'kernel_initializer': {'module': 'keras.initializers', 'class_name':
+'GlorotUniform', 'config': {'seed': None}, 'registered_name': None}, 'bias_initializer': {'module':
+'keras.initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name': None}, 'kernel_regularizer':
+None, 'bias_regularizer': None, 'activity_regularizer': None, 'kernel_constraint': None, 'bias_constraint':
+None}, 'registered_name': None, 'build_config': {'input_shape': [None, 192]}, 'name': 'price_h120',
+'inbound_nodes': [[['dropout_6', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name': 'Dense', 'config':
+{'name': 'price_h140', 'trainable': True, 'dtype': 'float32', 'units': 1, 'activation': 'linear', 'use_bias':
+True, 'kernel_initializer': {'module': 'keras.initializers', 'class_name': 'GlorotUniform', 'config': {'seed':
+None}, 'registered_name': None}, 'bias_initializer': {'module': 'keras.initializers', 'class_name': 'Zeros',
+'config': {}, 'registered_name': None}, 'kernel_regularizer': None, 'bias_regularizer': None,
+'activity_regularizer': None, 'kernel_constraint': None, 'bias_constraint': None}, 'registered_name': None,
+'build_config': {'input_shape': [None, 192]}, 'name': 'price_h140', 'inbound_nodes': [[['dropout_6', 0, 0,
+{}]]]}, {'module': 'keras.layers', 'class_name': 'Dense', 'config': {'name': 'price_h160', 'trainable': True,
+'dtype': 'float32', 'units': 1, 'activation': 'linear', 'use_bias': True, 'kernel_initializer': {'module':
+'keras.initializers', 'class_name': 'GlorotUniform', 'config': {'seed': None}, 'registered_name': None},
+'bias_initializer': {'module': 'keras.initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name':
+None}, 'kernel_regularizer': None, 'bias_regularizer': None, 'activity_regularizer': None,
+'kernel_constraint': None, 'bias_constraint': None}, 'registered_name': None, 'build_config': {'input_shape':
+[None, 192]}, 'name': 'price_h160', 'inbound_nodes': [[['dropout_6', 0, 0, {}]]]}, {'module': 'keras.layers',
+'class_name': 'Dense', 'config': {'name': 'price_h20', 'trainable': True, 'dtype': 'float32', 'units': 1,
+'activation': 'linear', 'use_bias': True, 'kernel_initializer': {'module': 'keras.initializers', 'class_name':
+'GlorotUniform', 'config': {'seed': None}, 'registered_name': None}, 'bias_initializer': {'module':
+'keras.initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name': None}, 'kernel_regularizer':
+None, 'bias_regularizer': None, 'activity_regularizer': None, 'kernel_constraint': None, 'bias_constraint':
+None}, 'registered_name': None, 'build_config': {'input_shape': [None, 192]}, 'name': 'price_h20',
+'inbound_nodes': [[['dropout_6', 0, 0, {}]]]}, {'module': 'keras.layers', 'class_name': 'Dense', 'config':
+{'name': 'price_h40', 'trainable': True, 'dtype': 'float32', 'units': 1, 'activation': 'linear', 'use_bias':
+True, 'kernel_initializer': {'module': 'keras.initializers', 'class_name': 'GlorotUniform', 'config': {'seed':
+None}, 'registered_name': None}, 'bias_initializer': {'module': 'keras.initializers', 'class_name': 'Zeros',
+'config': {}, 'registered_name': None}, 'kernel_regularizer': None, 'bias_regularizer': None,
+'activity_regularizer': None, 'kernel_constraint': None, 'bias_constraint': None}, 'registered_name': None,
+'build_config': {'input_shape': [None, 192]}, 'name': 'price_h40', 'inbound_nodes': [[['dropout_6', 0, 0,
+{}]]]}, {'module': 'keras.layers', 'class_name': 'Dense', 'config': {'name': 'price_h60', 'trainable': True,
+'dtype': 'float32', 'units': 1, 'activation': 'linear', 'use_bias': True, 'kernel_initializer': {'module':
+'keras.initializers', 'class_name': 'GlorotUniform', 'config': {'seed': None}, 'registered_name': None},
+'bias_initializer': {'module': 'keras.initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name':
+None}, 'kernel_regularizer': None, 'bias_regularizer': None, 'activity_regularizer': None,
+'kernel_constraint': None, 'bias_constraint': None}, 'registered_name': None, 'build_config': {'input_shape':
+[None, 192]}, 'name': 'price_h60', 'inbound_nodes': [[['dropout_6', 0, 0, {}]]]}, {'module': 'keras.layers',
+'class_name': 'Dense', 'config': {'name': 'price_h80', 'trainable': True, 'dtype': 'float32', 'units': 1,
+'activation': 'linear', 'use_bias': True, 'kernel_initializer': {'module': 'keras.initializers', 'class_name':
+'GlorotUniform', 'config': {'seed': None}, 'registered_name': None}, 'bias_initializer': {'module':
+'keras.initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name': None}, 'kernel_regularizer':
+None, 'bias_regularizer': None, 'activity_regularizer': None, 'kernel_constraint': None, 'bias_constraint':
+None}, 'registered_name': None, 'build_config': {'input_shape': [None, 192]}, 'name': 'price_h80',
+'inbound_nodes': [[['dropout_6', 0, 0, {}]]]}], 'input_layers': [['x', 0, 0]], 'output_layers': {'price_h20':
+['price_h20', 0, 0], 'price_h40': ['price_h40', 0, 0], 'price_h60': ['price_h60', 0, 0], 'price_h80':
+['price_h80', 0, 0], 'price_h100': ['price_h100', 0, 0], 'price_h120': ['price_h120', 0, 0], 'price_h140':
+['price_h140', 0, 0], 'price_h160': ['price_h160', 0, 0], 'cls': ['cls', 0, 0]}}, 'registered_name':
+'Functional', 'build_config': {'input_shape': [None, 512, 45]}, 'compile_config': None}
+Mitigation: serve_fastapi.py includes Keras3 custom layer loader; run_servers.sh sets USE_KERAS3=1/TF_USE_LEGACY_KERAS=0.
+
+Live update errors (logs/live_update.log):
+[cryptopanic] failed: cryptopanic api returned 404 (likely API path changed or key/plan not supported)
+[binance] failed: 403 Client Error: Forbidden for url:
+https://www.binance.com/bapi/composite/v1/public/cms/article/list/query
+Unsupported output format, use .parquet or .jsonl
+[news] ingest failed
+[cryptopanic] failed: cryptopanic api returned 404 (likely API path changed or key/plan not supported)
+[binance] failed: 403 Client Error: Forbidden for url:
+https://www.binance.com/bapi/composite/v1/public/cms/article/list/query
+Unsupported output format, use .parquet or .jsonl
+[news] ingest failed
+[cryptopanic] failed: cryptopanic api returned 404 (likely API path changed or key/plan not supported)
+[binance] failed: 403 Client Error: Forbidden for url:
+https://www.binance.com/bapi/composite/v1/public/cms/article/list/query
+Unsupported output format, use .parquet or .jsonl
+[news] ingest failed
+[cryptopanic] failed: cryptopanic api returned 404 (likely API path changed or key/plan not supported)
+[binance] failed: 403 Client Error: Forbidden for url:
+https://www.binance.com/bapi/composite/v1/public/cms/article/list/query
+Unsupported output format, use .parquet or .jsonl
+[news] ingest failed
+[cryptopanic] failed: cryptopanic api returned 404 (likely API path changed or key/plan not supported)
+[binance] failed: 403 Client Error: Forbidden for url:
+https://www.binance.com/bapi/composite/v1/public/cms/article/list/query
+Unsupported output format, use .parquet or .jsonl
+[news] ingest failed
+[cryptopanic] failed: cryptopanic api returned 404 (likely API path changed or key/plan not supported)
+[binance] failed: 403 Client Error: Forbidden for url:
+https://www.binance.com/bapi/composite/v1/public/cms/article/list/query
+Unsupported output format, use .parquet or .jsonl
+[news] ingest failed
+[cryptopanic] failed: cryptopanic api returned 404 (likely API path changed or key/plan not supported)
+[binance] failed: 403 Client Error: Forbidden for url:
+https://www.binance.com/bapi/composite/v1/public/cms/article/list/query
+Unsupported output format, use .parquet or .jsonl
+[news] ingest failed
+[cryptopanic] failed: cryptopanic api returned 404 (likely API path changed or key/plan not supported)
+[binance] failed: 403 Client Error: Forbidden for url:
+https://www.binance.com/bapi/composite/v1/public/cms/article/list/query
+Unsupported output format, use .parquet or .jsonl
+[news] ingest failed
+[cryptopanic] failed: cryptopanic api returned 404 (likely API path changed or key/plan not supported)
+[binance] failed: 403 Client Error: Forbidden for url:
+https://www.binance.com/bapi/composite/v1/public/cms/article/list/query
+[coinmarketcal] failed: HTTPSConnectionPool(host='developers.coinmarketcal.com', port=443): Read timed out.
+(read timeout=20)
+Unsupported output format, use .parquet or .jsonl
+[news] ingest failed
+[cryptopanic] failed: cryptopanic api returned 404 (likely API path changed or key/plan not supported)
+[binance] failed: 403 Client Error: Forbidden for url:
+https://www.binance.com/bapi/composite/v1/public/cms/article/list/query
+Unsupported output format, use .parquet or .jsonl
+Mitigation: live_update_once.sh continues on ingest failures and reuses existing news cache when present.
+
+Cloudflared tunnel errors (logs/cloudflared.log):
+2026-01-12T11:20:33Z INF Cannot determine default configuration path. No file [config.yml config.yaml] in
+[~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp /etc/cloudflared /usr/local/etc/cloudflared]
+2026-01-12T11:20:33Z WRN The user running cloudflared process has a GID (group ID) that is not within
+ping_group_range. You might need to add that user to a group within that range, or instead update the range to
+encompass a group the user is already in by modifying /proc/sys/net/ipv4/ping_group_range. Otherwise
+cloudflared will not be able to ping this network error="Group ID 1000 is not between ping group 1 to 0"
+2026-01-12T11:20:33Z WRN ICMP proxy feature is disabled error="cannot create ICMPv4 proxy: Group ID 1000 is
+not between ping group 1 to 0 nor ICMPv6 proxy: socket: permission denied"
+2026-01-12T11:20:33Z ERR Cannot determine default origin certificate path. No file cert.pem in [~/.cloudflared
+~/.cloudflare-warp ~/cloudflare-warp /etc/cloudflared /usr/local/etc/cloudflared]. You need to specify the
+origin certificate path by specifying the origincert option in the configuration file, or set
+TUNNEL_ORIGIN_CERT environment variable originCertPath=
+2026-01-12T16:03:44Z ERR failed to serve incoming request error="Error shutting down control stream: client
+disconnected"
+2026-01-12T16:03:44Z ERR Serve tunnel error error="connection with edge closed" connIndex=0 event=0
+ip=198.41.192.27
+2026-01-12T16:03:45Z ERR Connection terminated error="connection with edge closed" connIndex=0
+2026-01-12T16:50:29Z WRN Serve tunnel error error="connection with edge closed" connIndex=0 event=0
+ip=198.41.192.27
+2026-01-12T16:50:29Z ERR failed to serve incoming request error="Error shutting down control stream: context
+canceled"
+2026-01-12T16:50:30Z ERR Connection terminated error="connection with edge closed" connIndex=0
+2026-01-12T16:50:46Z ERR Unable to establish connection with Cloudflare edge error="TLS handshake with edge
+error: read tcp 192.168.0.157:58156->198.41.192.27:7844: i/o timeout" connIndex=0 event=0 ip=198.41.192.27
+2026-01-12T16:50:46Z ERR Serve tunnel error error="TLS handshake with edge error: read tcp
+192.168.0.157:58156->198.41.192.27:7844: i/o timeout" connIndex=0 event=0 ip=198.41.192.27
+2026-01-12T16:50:46Z ERR Connection terminated error="TLS handshake with edge error: read tcp
+192.168.0.157:58156->198.41.192.27:7844: i/o timeout" connIndex=0
+2026-01-12T16:51:06Z ERR Unable to establish connection with Cloudflare edge error="TLS handshake with edge
+error: read tcp 192.168.0.157:35324->198.41.200.53:7844: i/o timeout" connIndex=0 event=0 ip=198.41.200.53
+2026-01-12T16:51:06Z ERR Serve tunnel error error="TLS handshake with edge error: read tcp
+192.168.0.157:35324->198.41.200.53:7844: i/o timeout" connIndex=0 event=0 ip=198.41.200.53
+2026-01-12T16:51:12Z ERR Connection terminated error="TLS handshake with edge error: read tcp
+192.168.0.157:35324->198.41.200.53:7844: i/o timeout" connIndex=0
+2026-01-12T16:52:34Z ERR Unable to establish connection with Cloudflare edge error="TLS handshake with edge
+error: read tcp 192.168.0.157:56010->198.41.192.107:7844: i/o timeout" connIndex=0 event=0 ip=198.41.192.107
+2026-01-12T16:52:34Z ERR Serve tunnel error error="TLS handshake with edge error: read tcp
+192.168.0.157:56010->198.41.192.107:7844: i/o timeout" connIndex=0 event=0 ip=198.41.192.107
+2026-01-12T16:52:50Z ERR Connection terminated error="TLS handshake with edge error: read tcp
+192.168.0.157:56010->198.41.192.107:7844: i/o timeout" connIndex=0
+2026-01-12T16:53:05Z ERR Unable to establish connection with Cloudflare edge error="TLS handshake with edge
+error: read tcp 192.168.0.157:55072->198.41.192.67:7844: i/o timeout" connIndex=0 event=0 ip=198.41.192.67
+2026-01-12T16:53:05Z ERR Serve tunnel error error="TLS handshake with edge error: read tcp
+192.168.0.157:55072->198.41.192.67:7844: i/o timeout" connIndex=0 event=0 ip=198.41.192.67
+2026-01-12T16:53:29Z ERR Connection terminated error="TLS handshake with edge error: read tcp
+192.168.0.157:55072->198.41.192.67:7844: i/o timeout" connIndex=0
+2026-01-12T16:56:38Z ERR Unable to establish connection with Cloudflare edge error="TLS handshake with edge
+error: read tcp 192.168.0.157:36554->198.41.192.227:7844: i/o timeout" connIndex=0 event=0 ip=198.41.192.227
+2026-01-12T16:56:38Z ERR Serve tunnel error error="TLS handshake with edge error: read tcp
+192.168.0.157:36554->198.41.192.227:7844: i/o timeout" connIndex=0 event=0 ip=198.41.192.227
+2026-01-12T16:56:47Z ERR Connection terminated error="TLS handshake with edge error: read tcp
+192.168.0.157:36554->198.41.192.227:7844: i/o timeout" connIndex=0
+2026-01-12T17:02:22Z ERR Unable to establish connection with Cloudflare edge error="TLS handshake with edge
+error: read tcp 192.168.0.157:57068->198.41.200.73:7844: i/o timeout" connIndex=0 event=0 ip=198.41.200.73
+2026-01-12T17:02:22Z ERR Serve tunnel error error="TLS handshake with edge error: read tcp
+192.168.0.157:57068->198.41.200.73:7844: i/o timeout" connIndex=0 event=0 ip=198.41.200.73
+2026-01-12T17:02:45Z ERR Connection terminated error="TLS handshake with edge error: read tcp
+192.168.0.157:57068->198.41.200.73:7844: i/o timeout" connIndex=0
+2026-01-12T17:05:36Z ERR Unable to establish connection with Cloudflare edge error="TLS handshake with edge
+error: read tcp 192.168.0.157:56888->198.41.192.67:7844: i/o timeout" connIndex=0 event=0 ip=198.41.192.67
+2026-01-12T17:05:36Z ERR Serve tunnel error error="TLS handshake with edge error: read tcp
+192.168.0.157:56888->198.41.192.67:7844: i/o timeout" connIndex=0 event=0 ip=198.41.192.67
+2026-01-12T17:05:37Z ERR Connection terminated error="TLS handshake with edge error: read tcp
+192.168.0.157:56888->198.41.192.67:7844: i/o timeout" connIndex=0
+2026-01-12T17:07:42Z ERR Unable to establish connection with Cloudflare edge error="TLS handshake with edge
+error: read tcp 192.168.0.157:57514->198.41.200.43:7844: i/o timeout" connIndex=0 event=0 ip=198.41.200.43
+2026-01-12T17:07:42Z ERR Serve tunnel error error="TLS handshake with edge error: read tcp
+192.168.0.157:57514->198.41.200.43:7844: i/o timeout" connIndex=0 event=0 ip=198.41.200.43
+2026-01-12T17:08:09Z ERR Connection terminated error="TLS handshake with edge error: read tcp
+192.168.0.157:57514->198.41.200.43:7844: i/o timeout" connIndex=0
+2026-01-12T17:08:57Z ERR Unable to establish connection with Cloudflare edge error="TLS handshake with edge
+error: read tcp 192.168.0.157:60446->198.41.192.7:7844: i/o timeout" connIndex=0 event=0 ip=198.41.192.7
+2026-01-12T17:08:57Z ERR Serve tunnel error error="TLS handshake with edge error: read tcp
+192.168.0.157:60446->198.41.192.7:7844: i/o timeout" connIndex=0 event=0 ip=198.41.192.7
+2026-01-12T17:09:11Z ERR Connection terminated error="TLS handshake with edge error: read tcp
+192.168.0.157:60446->198.41.192.7:7844: i/o timeout" connIndex=0
+2026-01-12T17:14:17Z ERR failed to serve incoming request error="Unauthorized: Failed to get tunnel"
+2026-01-12T17:14:17Z ERR Register tunnel error from server side error="Unauthorized: Failed to get tunnel"
+connIndex=0 event=0 ip=198.41.192.77
+2026-01-12T17:14:44Z ERR Connection terminated error="Unauthorized: Failed to get tunnel" connIndex=0
+Mitigation: requires valid origin cert, permissions for ICMP/ping_group_range, stable network.
+
+15.5) NEWS MODEL EVAL METRICS (v2–v6 FROM LOGS)
+
+Format: horizon n mae_usd rmse_usd mape_pct smape_pct direction_acc_pct [line_mae_usd line_rmse_usd] start_ts
+
+- v2 (rolling-news, docker): /home/vitamind/my_project/model6/logs/eval_news_xlmr_v2_docker.log
+  20 15447 702.551157 1030.387891  0.658776   0.657621          50.378714 2025-07-08 21:15:00+00:00
+  80 15387 1512.015263 2076.163441  1.423634   1.415623          51.277052 2025-07-08 21:15:00+00:00
+  160 15307 2190.510226 2882.192249  2.065918    2.05156          49.689684 2025-07-08 21:15:00+00:00
+  20 15447 713.134484 1041.879851  0.668205   0.666881          49.860814 2025-07-08 21:15:00+00:00
+  80 15387 1515.335927 2082.618964  1.426789   1.418047           51.22506 2025-07-08 21:15:00+00:00
+  160 15307 2190.786817 2897.267468  2.065743   2.049374          49.160515 2025-07-08 21:15:00+00:00
+
+- v3 (rolling-news, line metrics): /home/vitamind/my_project/model6/logs/eval_news_xlmr_v3_line.log
+  20 15447 702.510419 1030.304172   0.65867   0.657529          50.385188    472.341512     736.378458 2025-07-08 21:15:00+00:00
+  80 15387 1525.474891 2050.603517  1.430286    1.42771          48.346006    997.852945    1461.634089 2025-07-08 21:15:00+00:00
+  160 15307 2204.699151 2865.271538  2.075513   2.066962          48.154439   1431.144767    2042.265998 2025-07-08 21:15:00+00:00
+
+- v4 price-weight (h20 line): /home/vitamind/my_project/model6/logs/eval_news_xlmr_v4_pw_h20_line.log
+  20 15447 700.170878 1024.418253  0.656178   0.655711          49.640707    471.259682     733.437533 2025-07-08 21:15:00+00:00
+
+- v4 price-weight (h80 line): /home/vitamind/my_project/model6/logs/eval_news_xlmr_v4_pw_h80_line.log
+  80 15387 1536.645374 2101.018985  1.446506   1.437102          51.218561   1002.745963    1485.580061 2025-07-08 21:15:00+00:00
+
+- v4 price-weight (h160 line): /home/vitamind/my_project/model6/logs/eval_news_xlmr_v4_pw_h160_line.log
+  160 15307 2288.032011 2913.297451  2.138737   2.138654           47.55994   1471.934113    2063.722423 2025-07-08 21:15:00+00:00
+
+- v5 dR + per-head scale (line): /home/vitamind/my_project/model6/logs/eval_news_xlmr_v5_dr_scale_line.log
+  20 15307  698.469713 1023.241750  0.653052   0.652310          49.513295    470.465277     732.673117 2025-07-08 21:15:00+00:00
+  80 15307 1511.021911 2063.955727  1.420408   1.414252          51.649572    988.600857    1463.448668 2025-07-08 21:15:00+00:00
+  160 15307 2195.020122 2881.857545  2.068058   2.056668          49.807278   1422.780259    2047.226547 2025-07-08 21:15:00+00:00
+
+- v6 dR + per-head scale + 8 nodes (training log only): /home/vitamind/my_project/model6/logs/train_news_xlmr_v6_dr_scale_8nodes.log
+  (no eval rows found in log; v6 has training log only, eval pending)
+
+15.6) NEWS MODELS: TEXT COMPARISON (SUMMARY)
+
+Based on logs in logs/eval_news_xlmr_v2_docker.log, eval_news_xlmr_v3_line.log,
+eval_news_xlmr_v4_pw_*_line.log, eval_news_xlmr_v5_dr_scale_line.log:
+- v2 (rolling-news baseline): h20 MAE ~702.55, h80 ~1512.02, h160 ~2190.51. No line metrics.
+- v3 (rolling-news + line metrics): h20 MAE ~702.51 (line MAE ~472.34),
+  h80 MAE ~1525.47 (line MAE ~997.85), h160 MAE ~2204.70 (line MAE ~1431.14).
+- v4 (price-weight): h20 improves slightly (MAE ~700.17, line MAE ~471.26),
+  but h80/h160 degrade (MAE ~1536.65 / ~2288.03; line MAE ~1002.75 / ~1471.93).
+- v5 (dR + per-head scale): best overall balance in logs:
+  h20 MAE ~698.47 (line MAE ~470.47), h80 MAE ~1511.02 (line MAE ~988.60),
+  h160 MAE ~2195.02 (line MAE ~1422.78).
+- v6 (dR + per-head scale + 8 nodes): trained (logs/train_news_xlmr_v6_dr_scale_8nodes.log),
+  eval pending due to Keras3 loader issues in scripts/eval_price_quality.py.
+
+15.7) RECOMMENDED CURRENT PROD MODEL (SHORT)
+
+- Until v6 evaluation is fixed: use v5 (dR + per-head scale) as the default news model,
+  since it shows best overall balance in both MAE and LineMAE across h20/h80/h160 in logs.
+- v4 price-weight can be used only for h20 if you want tiny gains on short horizon;
+  for h80/h160 it degrades accuracy in logs.
+- v3 is acceptable but generally worse than v5 in both MAE and line metrics.
+
+16) RUN / START COMMANDS (SINGLE COMMANDS)
+
+Local site (FastAPI + UI):
+  bash scripts/run_servers.sh
+Live auto-update + site:
+  bash scripts/run_live_site.sh
+News ingest only:
+  python3 scripts/news_ingest.py --out data/news/news.parquet --currency BTC --max-items 200
+
+17) IMPORTANT FILES TO KEEP IN SYNC
+
+- Features parquet and stats must match: mismatch causes runtime errors.
+- Models + norm_stats in new_models/ should be kept with their training logs in logs/.
+- API_BASE in html/aladin_from_image.html must point to running FastAPI.

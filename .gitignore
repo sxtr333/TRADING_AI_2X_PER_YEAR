@@ -34,3 +34,7 @@ catboost_info/
 *.pdf
 *.docx
 .DS_Store
+
+# Stage 5 submission is intentionally published as a plain GitHub folder.
+!stage5_final_nn/
+!stage5_final_nn/**

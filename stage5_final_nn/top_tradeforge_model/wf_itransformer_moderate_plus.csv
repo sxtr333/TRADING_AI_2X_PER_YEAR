@@ -1,0 +1,2 @@
+model,mode,opt_metric,threshold,short_threshold,cagr,sharpe,calmar,max_dd,total_return,fee_bps,slip_bps,min_hold,cooldown,max_trades_per_day,vol_col,vol_k,vol_block,vol_size_k,max_dd_cap,daily_limit,n_trades,n_samples
+itransformer_moderate_plus,long_short,sharpe,0.66,0.33999999999999997,0.9658976865236863,3.555980139827747,3.006942990270579,-0.32122248065426856,0.9097904349235899,2.0,2.0,2,1,120,,0.0,2.3,1.0,-0.3,-0.01,30,33539

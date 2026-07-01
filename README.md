@@ -43,7 +43,25 @@ web dashboard
 
 ## Финальная сдача
 
-Куратору удобнее смотреть этот файл:
+Актуальная сдача этапа 5 лежит обычной папкой, без ZIP:
+
+```text
+stage5_final_nn/
+```
+
+Прямая структура папки:
+
+```text
+stage5_final_nn/01_final_ready_model.ipynb
+stage5_final_nn/02_experiments_model_building.ipynb
+stage5_final_nn/btcusdt_15m_sample.csv
+stage5_final_nn/trade_signal_model.joblib
+stage5_final_nn/stage4_project_report.docx
+```
+
+Именно ссылку на `stage5_final_nn/` удобно отправлять на проверку.
+
+Также оставлен архив с теми же материалами:
 
 ```text
 submission/trade_model_submission_FINAL.zip
@@ -141,4 +159,3 @@ python scripts/smoke_forecast.py --help
 - Секреты и реальные платежные ключи должны задаваться только через `.env.site`.
 - Для полноценного production нужны отдельные backups, monitoring, HTTPS/tunnel и контроль доступа.
 - Для повторяемой защиты используйте архив из `submission/`, потому что все нужные файлы лежат внутри него.
-
